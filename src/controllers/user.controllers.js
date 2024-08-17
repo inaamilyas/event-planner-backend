@@ -98,6 +98,7 @@ const login = async (req, res) => {
       code: 400,
       status: "error",
       message: "Email and password are required",
+      data:null
     });
   }
 
@@ -108,6 +109,7 @@ const login = async (req, res) => {
       code: 400,
       status: "error",
       message: "Invalid email format",
+      data:null
     });
   }
 
@@ -115,6 +117,12 @@ const login = async (req, res) => {
     // 3. Check if user exists
     const user = await prisma.users.findUnique({
       where: { email: email },
+      select:{
+        id:true,
+        name:true,
+        email:true,
+        profile_pic:true
+      }
     });
 
     if (!user) {
@@ -122,6 +130,7 @@ const login = async (req, res) => {
         code: 404,
         status: "error",
         message: "Email not found",
+        data:null
       });
     }
 
@@ -132,6 +141,7 @@ const login = async (req, res) => {
         code: 401,
         status: "error",
         message: "Incorrect password",
+        data:null
       });
     }
 
@@ -140,10 +150,7 @@ const login = async (req, res) => {
       code: 200,
       status: "success",
       message: "Login successful",
-      data: {
-        id: user.id,
-        token:"token"
-      },
+      data: user,
     });
   } catch (error) {
     console.error("Error during login: ", error);
@@ -151,6 +158,7 @@ const login = async (req, res) => {
       code: 500,
       status: "error",
       message: "Internal server error",
+      data:null,
     });
   }
 };

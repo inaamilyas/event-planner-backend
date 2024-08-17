@@ -4,14 +4,15 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
-  const { fullname, email, password, confirmPassword, phone } = req.body;
+  const { name, email, phone, password, confirmPassword } = req.body;
 
   // 1. Check for empty fields
-  if (!fullname || !email || !password || !confirmPassword) {
+  if (!name || !email || !phone || !password || !confirmPassword) {
     return res.status(400).json({
       code: 400,
       status: "error",
       message: "All fields are required",
+      data: null,
     });
   }
 
@@ -22,6 +23,7 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "Invalid email format",
+      data: null,
     });
   }
 
@@ -31,12 +33,13 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "Passwords do not match",
+      data: null,
     });
   }
 
   // 4. Check if user already exists
   try {
-    const existingUser = await prisma.VenueManagers.findUnique({
+    const existingUser = await prisma.venue_managers.findUnique({
       where: { email: email },
     });
 
@@ -45,6 +48,7 @@ const signup = async (req, res) => {
         code: 409,
         status: "error",
         message: "User already exists",
+        data: null,
       });
     }
 
@@ -52,12 +56,20 @@ const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 6. Save the user data
-    const newUser = await prisma.VenueManagers.create({
+    const newUser = await prisma.venue_managers.create({
       data: {
-        name: fullname,
+        name,
         email,
         phone,
         password: hashedPassword,
+        profile_pic: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        profile_pic: true,
       },
     });
 
@@ -66,11 +78,7 @@ const signup = async (req, res) => {
       code: 200,
       status: "success",
       message: "Signup successful",
-      data: {
-        id: newUser.id,
-        fullname: newUser.fullname,
-        email: newUser.email,
-      },
+      data: newUser,
     });
   } catch (error) {
     console.error("Error creating user: ", error);
@@ -78,13 +86,12 @@ const signup = async (req, res) => {
       code: 500,
       status: "error",
       message: "Internal server error",
+      data: null,
     });
   }
 };
 
 const login = async (req, res) => {
-  console.log("inside login");
-  
   const { email, password } = req.body;
 
   // 1. Check for empty fields
@@ -93,6 +100,7 @@ const login = async (req, res) => {
       code: 400,
       status: "error",
       message: "Email and password are required",
+      data: null,
     });
   }
 
@@ -103,20 +111,29 @@ const login = async (req, res) => {
       code: 400,
       status: "error",
       message: "Invalid email format",
+      data: null,
     });
   }
 
   try {
     // 3. Check if user exists
-    const user = await prisma.VenueManagers.findUnique({
+    const user = await prisma.venue_managers.findUnique({
       where: { email: email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        profile_pic: true,
+      },
     });
 
     if (!user) {
       return res.status(404).json({
         code: 404,
         status: "error",
-        message: "User not found",
+        message: "Email not found",
+        data: null,
       });
     }
 
@@ -127,6 +144,7 @@ const login = async (req, res) => {
         code: 401,
         status: "error",
         message: "Incorrect password",
+        data: null,
       });
     }
 
@@ -134,12 +152,8 @@ const login = async (req, res) => {
     return res.status(200).json({
       code: 200,
       status: "success",
-      message: "Login successful",
-      data: {
-        id: user.id,
-        fullname: user.fullname,
-        email: user.email,
-      },
+      message: "Login successfully",
+      data: user,
     });
   } catch (error) {
     console.error("Error during login: ", error);
@@ -147,6 +161,7 @@ const login = async (req, res) => {
       code: 500,
       status: "error",
       message: "Internal server error",
+      data: null,
     });
   }
 };
