@@ -4,10 +4,10 @@ import bcrypt from "bcrypt"
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
-  const { fullname, email, password, confirmPassword } = req.body;
+  const { name, email, password, confirmPassword } = req.body;
 
   // 1. Check for empty fields
-  if (!fullname || !email || !password || !confirmPassword) {
+  if (!name || !email || !password || !confirmPassword) {
     return res.status(400).json({
       code: 400,
       status: "error",
@@ -39,7 +39,7 @@ const signup = async (req, res) => {
 
   // 4. Check if user already exists
   try {
-  const existingUser = await prisma.Users.findUnique({
+  const existingUser = await prisma.users.findUnique({
     where: { email: email },
   });
 
@@ -56,12 +56,19 @@ const signup = async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   // 6. Save the user data
-  const newUser = await prisma.user.create({
+  const newUser = await prisma.users.create({
     data: {
-      name: fullname,
+      name,
       email,
       password: hashedPassword,
+      profile_pic:null,
     },
+    select:{
+      id:true,
+      name:true,
+      email:true,
+      profile_pic:true
+    }
   });
 
   // 7. Return success response
@@ -69,7 +76,7 @@ const signup = async (req, res) => {
     code: 200,
     status: "success",
     message: "Signup successful",
-    data: user,
+    data: newUser,
 
   });
   } catch (error) {
@@ -106,7 +113,7 @@ const login = async (req, res) => {
 
   try {
     // 3. Check if user exists
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { email: email },
     });
 
@@ -114,7 +121,7 @@ const login = async (req, res) => {
       return res.status(404).json({
         code: 404,
         status: "error",
-        message: "Wmail not found",
+        message: "Email not found",
       });
     }
 
