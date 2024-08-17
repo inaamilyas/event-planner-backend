@@ -1,9 +1,25 @@
 import { Router } from "express";
-import { acceptBookingRequest, createBooking, createVenue, deleteBooking, deleteVenue, getBookingById, getVenueById, showAllBookingRequests, suggestNearestVenues, suggestVenuesBasedOnWeather, updateBooking, updateVenue } from "../controllers/venue.controller.js";
+import {
+  acceptBookingRequest,
+  createBooking,
+  getAllVenues,
+  createVenue,
+  deleteBooking,
+  deleteVenue,
+  getBookingById,
+  getVenueById,
+  showAllBookingRequests,
+  suggestNearestVenues,
+  suggestVenuesBasedOnWeather,
+  updateBooking,
+  updateVenue,
+} from "../controllers/venue.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-router.post("/", createVenue);
+router.get("/", getAllVenues);
+router.post("/", upload.single("picture"), createVenue);
 router.put("/", updateVenue);
 router.delete("/", deleteVenue);
 router.get("/:venue-id", getVenueById);
@@ -16,7 +32,7 @@ router.post("/booking/accept/:venue-id", acceptBookingRequest);
 
 router.post("/booking/requests", showAllBookingRequests);
 
-router.post("/venues/suggest/nearest", suggestNearestVenues); 
+router.post("/venues/suggest/nearest", suggestNearestVenues);
 router.post("/venues/suggest/weather", suggestVenuesBasedOnWeather);
 
 export default router;

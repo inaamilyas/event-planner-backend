@@ -1,3 +1,8 @@
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt"
+
+const prisma = new PrismaClient();
+
 const signup = async (req, res) => {
   const { fullname, email, password, confirmPassword } = req.body;
 
@@ -7,6 +12,7 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "All fields are required",
+      data: null,
     });
   }
 
@@ -17,6 +23,7 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "Invalid email format",
+      data:null
     });
   }
 
@@ -26,46 +33,45 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "Passwords do not match",
+      data:null
     });
   }
 
   // 4. Check if user already exists
   try {
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email },
+  const existingUser = await prisma.Users.findUnique({
+    where: { email: email },
+  });
+
+  if (existingUser) {
+    return res.status(409).json({
+      code: 409,
+      status: "error",
+      message: "User already exists",
+      data:null
     });
+  }
 
-    if (existingUser) {
-      return res.status(409).json({
-        code: 409,
-        status: "error",
-        message: "User already exists",
-      });
-    }
+  // 5. Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+  // 6. Save the user data
+  const newUser = await prisma.user.create({
+    data: {
+      name: fullname,
+      email,
+      password: hashedPassword,
+    },
+  });
 
-    // 6. Save the user data
-    const newUser = await prisma.user.create({
-      data: {
-        fullname,
-        email,
-        password: hashedPassword,
-      },
-    });
+  // 7. Return success response
+  return res.status(200).json({
+    code: 200,
+    status: "success",
+    message: "Signup successful",
+    data: user,
 
-    // 7. Return success response
-    return res.status(201).json({
-      code: 201,
-      status: "success",
-      message: "Signup successful",
-      data: {
-        id: newUser.id,
-        fullname: newUser.fullname,
-        email: newUser.email,
-      },
-    });
+  });
   } catch (error) {
     console.error("Error creating user: ", error);
     return res.status(500).json({
@@ -108,7 +114,7 @@ const login = async (req, res) => {
       return res.status(404).json({
         code: 404,
         status: "error",
-        message: "User not found",
+        message: "Wmail not found",
       });
     }
 
@@ -129,8 +135,7 @@ const login = async (req, res) => {
       message: "Login successful",
       data: {
         id: user.id,
-        fullname: user.fullname,
-        email: user.email,
+        token:"token"
       },
     });
   } catch (error) {

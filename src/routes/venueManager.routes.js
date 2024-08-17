@@ -1,11 +1,11 @@
 import { Router } from "express";
 
-import { signup } from "../controllers/venueManager.controller";
+import { signup, login, updateProfile } from "../controllers/venueManager.controller.js";
 
 const router = Router();
 
 router.post("/signup", signup);
-router.post("/login", signup);
-router.post("/update-profile", signup);
+router.post("/login", login);
+router.post("/update-profile", updateProfile);
 
 export default router;

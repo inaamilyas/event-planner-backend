@@ -41,8 +41,8 @@ const createEvent = async (req, res) => {
                 location,
             },
         });
-        res.status(201).json({
-            code: 201,
+        res.status(200).json({
+            code: 200,
             status: "success",
             message: "Event created successfully",
             data: newEvent,

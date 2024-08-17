@@ -1,61 +1,31 @@
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
+import path from "path";
+import getAddressbyCoordinates from "../utils/getAddressByCoordinates.js";
 
 const prisma = new PrismaClient();
 
-const createVenue = async (req, res) => {
-  const { name, address, capacity, description } = req.body;
-
-  // 1. Check for empty fields
-  if (!name || !address || !capacity) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Name, address, and capacity are required",
-    });
-  }
-
-  // 2. Validate name and address format
-  if (typeof name !== "string" || typeof address !== "string") {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Name and address must be strings",
-    });
-  }
-
-  // 3. Validate capacity
-  if (!Number.isInteger(capacity) || capacity <= 0) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Capacity must be a positive integer",
-    });
-  }
-
-  // 4. Validate description format
-  if (description && typeof description !== "string") {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Description must be a string",
-    });
-  }
-
+const getAllVenues = async (req, res) => {
   try {
-    const newVenue = await Prisma.venue.create({
-      data: {
-        name,
-        address,
-        capacity,
-        description,
+    const venues = await prisma.Venues.findMany({
+      where: {
+        owner_id: 3,
       },
     });
-    res.status(201).json({
-      code: 201,
+    
+    // Update the picture paths to URLs
+    const updatedVenues = venues.map((venue) => {
+      return {
+        ...venue,
+        picture: `/venues/${path.basename(venue.picture)}`,
+      };
+    });
+
+    res.status(200).json({
+      code: 200,
       status: "success",
-      message: "Venue created successfully",
-      data: newVenue,
+      message: "Venue fetched successfully",
+      data: updatedVenues,
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
@@ -63,6 +33,52 @@ const createVenue = async (req, res) => {
       code: 500,
       status: "error",
       message: "Internal server error",
+      data: null,
+    });
+  }
+};
+
+const createVenue = async (req, res) => {
+  console.log("inside create venue");
+  const { name, about, latitude, longitude, phone } = req.body;
+
+  const owner = await prisma.VenueManagers.findFirst({
+    where: {
+      email: "inam@inam.com",
+    },
+  });
+
+  try {
+    // Get the image file path from req.file
+    const imagePath = req.file ? req.file.path : null;
+
+    const address = await getAddressbyCoordinates(latitude, longitude);
+
+    const newVenue = await prisma.Venues.create({
+      data: {
+        name,
+        address,
+        about,
+        picture: imagePath,
+        latitude: parseFloat(latitude),
+        owner_id: owner.id,
+        longitude: parseFloat(longitude),
+        phone: phone.toString(),
+      },
+    });
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Venue created successfully",
+      data: null,
+    });
+  } catch (error) {
+    console.error("Error creating venue: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+      data: null,
     });
   }
 };
@@ -297,8 +313,8 @@ const createBooking = async (req, res) => {
         status,
       },
     });
-    res.status(201).json({
-      code: 201,
+    res.status(200).json({
+      code: 200,
       status: "success",
       message: "Booking created successfully",
       data: newBooking,
@@ -622,152 +638,163 @@ const showAllBookingRequests = async (req, res) => {
 };
 
 const suggestNearestVenues = async (req, res) => {
-    const { latitude, longitude } = req.body;
+  const { latitude, longitude } = req.body;
 
-    // 1. Validate latitude and longitude
-    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-        return res.status(400).json({
-            code: 400,
-            status: "error",
-            message: "Latitude and longitude must be numbers",
-        });
-    }
+  // 1. Validate latitude and longitude
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    return res.status(400).json({
+      code: 400,
+      status: "error",
+      message: "Latitude and longitude must be numbers",
+    });
+  }
 
-    try {
-        // 2. Fetch all venues with their coordinates
-        const venues = await prisma.venue.findMany({
-            select: {
-                id: true,
-                name: true,
-                address: true,
-                latitude: true,
-                longitude: true,
-            },
-        });
+  try {
+    // 2. Fetch all venues with their coordinates
+    const venues = await prisma.venue.findMany({
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+      },
+    });
 
-        // 3. Calculate distance using the Haversine formula
-        const haversine = (lat1, lon1, lat2, lon2) => {
-            const toRad = (angle) => (Math.PI / 180) * angle;
-            const R = 6371; // Radius of the Earth in km
-            const dLat = toRad(lat2 - lat1);
-            const dLon = toRad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // Distance in km
-        };
+    // 3. Calculate distance using the Haversine formula
+    const haversine = (lat1, lon1, lat2, lon2) => {
+      const toRad = (angle) => (Math.PI / 180) * angle;
+      const R = 6371; // Radius of the Earth in km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    };
 
-        // 4. Map venues with calculated distances
-        const venuesWithDistance = venues.map(venue => ({
-            ...venue,
-            distance: haversine(latitude, longitude, venue.latitude, venue.longitude),
-        }));
+    // 4. Map venues with calculated distances
+    const venuesWithDistance = venues.map((venue) => ({
+      ...venue,
+      distance: haversine(latitude, longitude, venue.latitude, venue.longitude),
+    }));
 
-        // 5. Sort venues by distance
-        venuesWithDistance.sort((a, b) => a.distance - b.distance);
+    // 5. Sort venues by distance
+    venuesWithDistance.sort((a, b) => a.distance - b.distance);
 
-        res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Nearest venues retrieved successfully",
-            data: venuesWithDistance,
-        });
-    } catch (error) {
-        console.error("Error suggesting nearest venues: ", error);
-        res.status(500).json({
-            code: 500,
-            status: "error",
-            message: "Internal server error",
-        });
-    }
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Nearest venues retrieved successfully",
+      data: venuesWithDistance,
+    });
+  } catch (error) {
+    console.error("Error suggesting nearest venues: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
+  }
 };
-
 
 const suggestVenuesBasedOnWeather = async (req, res) => {
-    const { latitude, longitude } = req.body;
+  const { latitude, longitude } = req.body;
 
-    // 1. Validate latitude and longitude
-    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-        return res.status(400).json({
-            code: 400,
-            status: "error",
-            message: "Latitude and longitude must be numbers",
-        });
+  // 1. Validate latitude and longitude
+  if (typeof latitude !== "number" || typeof longitude !== "number") {
+    return res.status(400).json({
+      code: 400,
+      status: "error",
+      message: "Latitude and longitude must be numbers",
+    });
+  }
+
+  try {
+    // 2. Fetch weather data using a weather API
+    const weatherApiKey = "YOUR_WEATHER_API_KEY"; // Replace with your Weather API key
+    const weatherResponse = await axios.get(
+      `https://api.weatherapi.com/v1/current.json?key=${weatherApiKey}&q=${latitude},${longitude}`
+    );
+    const weatherData = weatherResponse.data;
+
+    const currentCondition = weatherData.current.condition.text.toLowerCase();
+
+    // 3. Determine venue type preference based on weather
+    let preferredVenueTypes;
+    if (
+      currentCondition.includes("rain") ||
+      currentCondition.includes("storm")
+    ) {
+      preferredVenueTypes = ["indoor"]; // Suggest indoor venues for rainy or stormy weather
+    } else if (
+      currentCondition.includes("sunny") ||
+      currentCondition.includes("clear")
+    ) {
+      preferredVenueTypes = ["outdoor", "indoor"]; // Suggest outdoor or indoor venues for sunny weather
+    } else {
+      preferredVenueTypes = ["indoor", "outdoor"]; // Default to suggesting both types
     }
 
-    try {
-        // 2. Fetch weather data using a weather API
-        const weatherApiKey = 'YOUR_WEATHER_API_KEY'; // Replace with your Weather API key
-        const weatherResponse = await axios.get(`https://api.weatherapi.com/v1/current.json?key=${weatherApiKey}&q=${latitude},${longitude}`);
-        const weatherData = weatherResponse.data;
+    // 4. Fetch venues based on the preferred venue types
+    const venues = await prisma.venue.findMany({
+      where: {
+        type: {
+          in: preferredVenueTypes, // Assuming 'type' is a field in your venues table
+        },
+      },
+      include: {
+        address: true, // Include address or any other related data if needed
+      },
+    });
 
-        const currentCondition = weatherData.current.condition.text.toLowerCase();
+    // 5. Calculate distance using the Haversine formula (as shown in the previous answer)
+    const haversine = (lat1, lon1, lat2, lon2) => {
+      const toRad = (angle) => (Math.PI / 180) * angle;
+      const R = 6371; // Radius of the Earth in km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distance in km
+    };
 
-        // 3. Determine venue type preference based on weather
-        let preferredVenueTypes;
-        if (currentCondition.includes('rain') || currentCondition.includes('storm')) {
-            preferredVenueTypes = ['indoor']; // Suggest indoor venues for rainy or stormy weather
-        } else if (currentCondition.includes('sunny') || currentCondition.includes('clear')) {
-            preferredVenueTypes = ['outdoor', 'indoor']; // Suggest outdoor or indoor venues for sunny weather
-        } else {
-            preferredVenueTypes = ['indoor', 'outdoor']; // Default to suggesting both types
-        }
+    // 6. Map venues with calculated distances
+    const venuesWithDistance = venues.map((venue) => ({
+      ...venue,
+      distance: haversine(latitude, longitude, venue.latitude, venue.longitude),
+    }));
 
-        // 4. Fetch venues based on the preferred venue types
-        const venues = await prisma.venue.findMany({
-            where: {
-                type: {
-                    in: preferredVenueTypes, // Assuming 'type' is a field in your venues table
-                },
-            },
-            include: {
-                address: true,  // Include address or any other related data if needed
-            },
-        });
+    // 7. Sort venues by distance
+    venuesWithDistance.sort((a, b) => a.distance - b.distance);
 
-        // 5. Calculate distance using the Haversine formula (as shown in the previous answer)
-        const haversine = (lat1, lon1, lat2, lon2) => {
-            const toRad = (angle) => (Math.PI / 180) * angle;
-            const R = 6371; // Radius of the Earth in km
-            const dLat = toRad(lat2 - lat1);
-            const dLon = toRad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // Distance in km
-        };
-
-        // 6. Map venues with calculated distances
-        const venuesWithDistance = venues.map(venue => ({
-            ...venue,
-            distance: haversine(latitude, longitude, venue.latitude, venue.longitude),
-        }));
-
-        // 7. Sort venues by distance
-        venuesWithDistance.sort((a, b) => a.distance - b.distance);
-
-        res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Venues suggested based on weather",
-            data: venuesWithDistance,
-        });
-    } catch (error) {
-        console.error("Error suggesting venues based on weather: ", error);
-        res.status(500).json({
-            code: 500,
-            status: "error",
-            message: "Internal server error",
-        });
-    }
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Venues suggested based on weather",
+      data: venuesWithDistance,
+    });
+  } catch (error) {
+    console.error("Error suggesting venues based on weather: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
+  }
 };
 
-
 export {
+  getAllVenues,
   createVenue,
   updateVenue,
   deleteVenue,
@@ -779,5 +806,5 @@ export {
   getBookingById,
   showAllBookingRequests,
   suggestNearestVenues,
-  suggestVenuesBasedOnWeather
+  suggestVenuesBasedOnWeather,
 };
