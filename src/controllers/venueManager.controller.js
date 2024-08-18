@@ -119,13 +119,6 @@ const login = async (req, res) => {
     // 3. Check if user exists
     const user = await prisma.venue_managers.findUnique({
       where: { email: email },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        profile_pic: true,
-      },
     });
 
     if (!user) {

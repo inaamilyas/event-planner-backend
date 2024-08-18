@@ -7,12 +7,25 @@ const prisma = new PrismaClient();
 
 const getAllVenues = async (req, res) => {
   try {
-    const venues = await prisma.Venues.findMany({
+    const venues = await prisma.venues.findMany({
       where: {
-        owner_id: 3,
+        owner: {
+          email: "inam@inam.com",
+        },
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            profile_pic: true,
+          },
+        },
       },
     });
-    
+
     // Update the picture paths to URLs
     const updatedVenues = venues.map((venue) => {
       return {
@@ -20,6 +33,8 @@ const getAllVenues = async (req, res) => {
         picture: `/venues/${path.basename(venue.picture)}`,
       };
     });
+
+    console.log(venues);
 
     res.status(200).json({
       code: 200,
@@ -42,7 +57,7 @@ const createVenue = async (req, res) => {
   console.log("inside create venue");
   const { name, about, latitude, longitude, phone } = req.body;
 
-  const owner = await prisma.VenueManagers.findFirst({
+  const owner = await prisma.venue_managers.findFirst({
     where: {
       email: "inam@inam.com",
     },
@@ -54,7 +69,7 @@ const createVenue = async (req, res) => {
 
     const address = await getAddressbyCoordinates(latitude, longitude);
 
-    const newVenue = await prisma.Venues.create({
+    await prisma.venues.create({
       data: {
         name,
         address,
@@ -638,26 +653,22 @@ const showAllBookingRequests = async (req, res) => {
 };
 
 const suggestNearestVenues = async (req, res) => {
-  const { latitude, longitude } = req.body;
-
-  // 1. Validate latitude and longitude
-  if (typeof latitude !== "number" || typeof longitude !== "number") {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Latitude and longitude must be numbers",
-    });
-  }
+  let { latitude, longitude } = req.body;
+  latitude = parseFloat(latitude);
+  longitude = parseFloat(longitude);
 
   try {
     // 2. Fetch all venues with their coordinates
-    const venues = await prisma.venue.findMany({
-      select: {
-        id: true,
-        name: true,
-        address: true,
-        latitude: true,
-        longitude: true,
+    const venues = await prisma.venues.findMany({
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            profile_pic: true,
+          },
+        },
       },
     });
 
@@ -677,14 +688,30 @@ const suggestNearestVenues = async (req, res) => {
       return R * c; // Distance in km
     };
 
-    // 4. Map venues with calculated distances
+    // Helper function to format distance
+    const formatDistance = (distanceInKm) => {
+      if (distanceInKm < 1) {
+        return `${Math.round(distanceInKm * 1000)}m`;
+      } else if (distanceInKm < 10) {
+        return `${distanceInKm.toFixed(1)}KM`;
+      } else {
+        return `${Math.round(distanceInKm)}KM`;
+      }
+    };
+
+    // Map venues with calculated distances
     const venuesWithDistance = venues.map((venue) => ({
       ...venue,
-      distance: haversine(latitude, longitude, venue.latitude, venue.longitude),
+      distance: formatDistance(
+        haversine(latitude, longitude, venue.latitude, venue.longitude)
+      ),
+      picture: `/venues/${path.basename(venue.picture)}`,
     }));
 
-    // 5. Sort venues by distance
-    venuesWithDistance.sort((a, b) => a.distance - b.distance);
+    // Sort venues by distance
+    venuesWithDistance.sort(
+      (a, b) => parseFloat(a.distance) - parseFloat(b.distance)
+    );
 
     res.status(200).json({
       code: 200,
@@ -741,7 +768,7 @@ const suggestVenuesBasedOnWeather = async (req, res) => {
     }
 
     // 4. Fetch venues based on the preferred venue types
-    const venues = await prisma.venue.findMany({
+    const venues = await prisma.venues.findMany({
       where: {
         type: {
           in: preferredVenueTypes, // Assuming 'type' is a field in your venues table

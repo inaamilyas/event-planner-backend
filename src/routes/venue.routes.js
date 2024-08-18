@@ -32,7 +32,7 @@ router.post("/booking/accept/:venue-id", acceptBookingRequest);
 
 router.post("/booking/requests", showAllBookingRequests);
 
-router.post("/venues/suggest/nearest", suggestNearestVenues);
-router.post("/venues/suggest/weather", suggestVenuesBasedOnWeather);
+router.post("/suggest/nearest", suggestNearestVenues);
+router.post("/suggest/weather", suggestVenuesBasedOnWeather);
 
 export default router;

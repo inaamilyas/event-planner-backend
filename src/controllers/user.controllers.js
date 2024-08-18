@@ -121,7 +121,8 @@ const login = async (req, res) => {
         id:true,
         name:true,
         email:true,
-        profile_pic:true
+        profile_pic:true,
+        password:true
       }
     });
 
