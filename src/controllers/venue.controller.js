@@ -823,6 +823,8 @@ const suggestVenuesBasedOnWeather = async (req, res) => {
 export {
   getAllVenues,
   createVenue,
+  suggestNearestVenues,
+  
   updateVenue,
   deleteVenue,
   getVenueById,
@@ -832,6 +834,5 @@ export {
   acceptBookingRequest,
   getBookingById,
   showAllBookingRequests,
-  suggestNearestVenues,
   suggestVenuesBasedOnWeather,
 };

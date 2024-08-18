@@ -41,16 +41,20 @@ model venue_managers {
 }
 
 model events {
-  id          Int     @id @default(autoincrement())
-  name        String?
-  email       String  @unique
-  password    String?
-  profile_pic String?
-  usersId    Int?
+  id           Int       @id @default(autoincrement())
+  name         String?
+  date         DateTime?
+  time         String?
+  budget       Int
+  about        String?
+  no_of_guests Int?
+  user_id      Int
+  picture      String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  users      users?   @relation(fields: [usersId], references: [id])
+
+  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model venues {
