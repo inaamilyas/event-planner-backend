@@ -267,53 +267,24 @@ const deleteVenue = async (req, res) => {
 };
 
 const createBooking = async (req, res) => {
-  const { venueId, userId, bookingDate, startTime, endTime, status } = req.body;
+  console.log("create");
+  
+
+  const { bookingDate, startTime, endTime } = req.body;
+
+  console.log(req.body);
+  
 
   // 1. Check for empty fields
   if (
-    !venueId ||
-    !userId ||
     !bookingDate ||
     !startTime ||
-    !endTime ||
-    !status
+    !endTime
   ) {
     return res.status(400).json({
-      code: 400,
+      code: 401,
       status: "error",
       message: "All fields are required",
-    });
-  }
-
-  // 2. Validate venueId and userId
-  if (!Number.isInteger(venueId) || !Number.isInteger(userId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid venue or user ID",
-    });
-  }
-
-  // 3. Validate bookingDate, startTime, and endTime formats
-  if (
-    isNaN(Date.parse(bookingDate)) ||
-    isNaN(Date.parse(startTime)) ||
-    isNaN(Date.parse(endTime))
-  ) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid date format",
-    });
-  }
-
-  // 4. Validate status
-  const validStatuses = ["confirmed", "pending", "cancelled"];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid status value",
     });
   }
 
@@ -325,7 +296,6 @@ const createBooking = async (req, res) => {
         bookingDate: new Date(bookingDate),
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        status,
       },
     });
     res.status(200).json({

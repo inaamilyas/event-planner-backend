@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -23,7 +23,7 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "Invalid email format",
-      data:null
+      data: null,
     });
   }
 
@@ -33,52 +33,51 @@ const signup = async (req, res) => {
       code: 400,
       status: "error",
       message: "Passwords do not match",
-      data:null
+      data: null,
     });
   }
 
   // 4. Check if user already exists
   try {
-  const existingUser = await prisma.users.findUnique({
-    where: { email: email },
-  });
-
-  if (existingUser) {
-    return res.status(409).json({
-      code: 409,
-      status: "error",
-      message: "User already exists",
-      data:null
+    const existingUser = await prisma.users.findUnique({
+      where: { email: email },
     });
-  }
 
-  // 5. Hash the password
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // 6. Save the user data
-  const newUser = await prisma.users.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-      profile_pic:null,
-    },
-    select:{
-      id:true,
-      name:true,
-      email:true,
-      profile_pic:true
+    if (existingUser) {
+      return res.status(409).json({
+        code: 409,
+        status: "error",
+        message: "User already exists",
+        data: null,
+      });
     }
-  });
 
-  // 7. Return success response
-  return res.status(200).json({
-    code: 200,
-    status: "success",
-    message: "Signup successful",
-    data: newUser,
+    // 5. Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  });
+    // 6. Save the user data
+    const newUser = await prisma.users.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        profile_pic: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile_pic: true,
+      },
+    });
+
+    // 7. Return success response
+    return res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Signup successful",
+      data: newUser,
+    });
   } catch (error) {
     console.error("Error creating user: ", error);
     return res.status(500).json({
@@ -98,7 +97,7 @@ const login = async (req, res) => {
       code: 400,
       status: "error",
       message: "Email and password are required",
-      data:null
+      data: null,
     });
   }
 
@@ -109,7 +108,7 @@ const login = async (req, res) => {
       code: 400,
       status: "error",
       message: "Invalid email format",
-      data:null
+      data: null,
     });
   }
 
@@ -117,13 +116,13 @@ const login = async (req, res) => {
     // 3. Check if user exists
     const user = await prisma.users.findUnique({
       where: { email: email },
-      select:{
-        id:true,
-        name:true,
-        email:true,
-        profile_pic:true,
-        password:true
-      }
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile_pic: true,
+        password: true,
+      },
     });
 
     if (!user) {
@@ -131,7 +130,7 @@ const login = async (req, res) => {
         code: 404,
         status: "error",
         message: "Email not found",
-        data:null
+        data: null,
       });
     }
 
@@ -142,7 +141,7 @@ const login = async (req, res) => {
         code: 401,
         status: "error",
         message: "Incorrect password",
-        data:null
+        data: null,
       });
     }
 
@@ -159,7 +158,7 @@ const login = async (req, res) => {
       code: 500,
       status: "error",
       message: "Internal server error",
-      data:null,
+      data: null,
     });
   }
 };
@@ -207,4 +206,40 @@ const updateProfile = async (req, res) => {
   }
 };
 
-export { signup, login, updateProfile };
+const getUserInformation = async (req, res) => {
+  try {
+    // Extract user ID from the headers
+    const userId = parseInt(req.headers["user-id"], 10);
+
+    // Fetch events and venues for the user
+    const [events, venues] = await Promise.all([
+      prisma.event.findMany({
+        where: { userId: userId },
+      }),
+      prisma.venue.findMany({
+        where: { userId: userId },
+      }),
+    ]);
+
+    const userInformation = await prisma.users.findFirst({
+      where: {
+        id: userId,
+        events: {
+          user_id: userId,
+        },
+      },
+    });
+
+    // const venues = getNearestVenues(userId); 
+
+    // format the data and send as response 
+
+    // Return the results
+    res.json({ events, venues });
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export { signup, login, updateProfile, getUserInformation };

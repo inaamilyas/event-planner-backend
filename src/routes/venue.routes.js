@@ -22,15 +22,16 @@ router.get("/", getAllVenues);
 router.post("/", upload.single("picture"), createVenue);
 router.put("/", updateVenue);
 router.delete("/", deleteVenue);
-router.get("/:venue-id", getVenueById);
+router.get("/:venue_id", getVenueById);
 
-router.post("/booking/:venue-id", createBooking);
-router.put("/booking/:venue-id", updateBooking);
-router.delete("/booking/:venue-id", deleteBooking);
-router.get("/booking/:venue-id", getBookingById);
-router.post("/booking/accept/:venue-id", acceptBookingRequest);
 
-router.post("/booking/requests", showAllBookingRequests);
+router.post("/booking/:venue_id", createBooking);
+// router.put("/booking/:venue_id", updateBooking);
+// router.delete("/booking/:venue_id", deleteBooking);
+// router.get("/booking/:venue_id", getBookingById);
+// router.post("/booking/accept/:venue_id", acceptBookingRequest);
+
+// router.post("/booking/requests", showAllBookingRequests);
 
 router.post("/suggest/nearest", suggestNearestVenues);
 router.post("/suggest/weather", suggestVenuesBasedOnWeather);

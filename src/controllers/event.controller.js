@@ -9,13 +9,8 @@ const formattedDate = parse('21/8/2024', 'd/M/yyyy', new Date());
 
 const createEvent = async (req, res) => {
   const userId = 4;
-  
-  console.log("req.body");
-  console.log(req.body);
-  
   const picture = req.file ? req.file.path : null;
   const { name, time, date, no_of_guests, about, budget } = req.body;
-  console.log(name, time, date, no_of_guests, about, budget, picture);
 
 
 //   const formattedDate = new Date(date);
@@ -23,7 +18,6 @@ const createEvent = async (req, res) => {
 
   // 1. Check for empty fields
   if (!name || !time || !date || !no_of_guests || !about || !budget) {
-    console.log("no body", picture);
     
     return res.status(400).json({
       code: 400,
@@ -46,11 +40,12 @@ const createEvent = async (req, res) => {
         picture,
       },
     });
+    
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Event created successfully",
-      data: null,
+      data: newEvent.id,
     });
   } catch (error) {
     console.error("Error creating event: ", error);
