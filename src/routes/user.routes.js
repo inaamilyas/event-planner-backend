@@ -8,6 +8,6 @@ router.post("/signup", signup);
 router.post("/login", login);
 router.post("/update-profile", updateProfile);
 
-router.post("/", getUserInformation);
+router.post("/info", getUserInformation);
 
 export default router;

@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
 import axios from "axios";
-import path from "path";
+import { parse } from "date-fns";
 import getAddressbyCoordinates from "../utils/getAddressByCoordinates.js";
 
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const getAllVenues = async (req, res) => {
@@ -267,20 +267,17 @@ const deleteVenue = async (req, res) => {
 };
 
 const createBooking = async (req, res) => {
-  console.log("create");
-  
+  console.log("create booking");
 
-  const { bookingDate, startTime, endTime } = req.body;
+  const { venue_id } = req.params;
+  const { date, start_time, end_time, event_id, phone } = req.body;
 
   console.log(req.body);
-  
 
   // 1. Check for empty fields
-  if (
-    !bookingDate ||
-    !startTime ||
-    !endTime
-  ) {
+  if (date=== "" || start_time=== "" || end_time === "" || event_id === "" ) {
+    console.log("inside if");
+    
     return res.status(400).json({
       code: 401,
       status: "error",
@@ -289,20 +286,24 @@ const createBooking = async (req, res) => {
   }
 
   try {
-    const newBooking = await prisma.booking.create({
+    const newBooking = await prisma.venue_booking.create({
       data: {
-        venueId,
-        userId,
-        bookingDate: new Date(bookingDate),
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        venue_id: parseInt(venue_id),
+        event_id: parseInt(event_id),
+        date: parse(date, 'd/M/yyyy', new Date()),
+        start_time,
+        end_time,
+        phone,
       },
     });
+
+    console.log("Booking created successfully");
+
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Booking created successfully",
-      data: newBooking,
+      data: null,
     });
   } catch (error) {
     console.error("Error creating booking: ", error);
@@ -628,61 +629,6 @@ const suggestNearestVenues = async (req, res) => {
   longitude = parseFloat(longitude);
 
   try {
-    // 2. Fetch all venues with their coordinates
-    const venues = await prisma.venues.findMany({
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            profile_pic: true,
-          },
-        },
-      },
-    });
-
-    // 3. Calculate distance using the Haversine formula
-    const haversine = (lat1, lon1, lat2, lon2) => {
-      const toRad = (angle) => (Math.PI / 180) * angle;
-      const R = 6371; // Radius of the Earth in km
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(lat1)) *
-          Math.cos(toRad(lat2)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c; // Distance in km
-    };
-
-    // Helper function to format distance
-    const formatDistance = (distanceInKm) => {
-      if (distanceInKm < 1) {
-        return `${Math.round(distanceInKm * 1000)}m`;
-      } else if (distanceInKm < 10) {
-        return `${distanceInKm.toFixed(1)}KM`;
-      } else {
-        return `${Math.round(distanceInKm)}KM`;
-      }
-    };
-
-    // Map venues with calculated distances
-    const venuesWithDistance = venues.map((venue) => ({
-      ...venue,
-      distance: formatDistance(
-        haversine(latitude, longitude, venue.latitude, venue.longitude)
-      ),
-      picture: `/venues/${path.basename(venue.picture)}`,
-    }));
-
-    // Sort venues by distance
-    venuesWithDistance.sort(
-      (a, b) => parseFloat(a.distance) - parseFloat(b.distance)
-    );
-
     res.status(200).json({
       code: 200,
       status: "success",
@@ -794,7 +740,6 @@ export {
   getAllVenues,
   createVenue,
   suggestNearestVenues,
-  
   updateVenue,
   deleteVenue,
   getVenueById,

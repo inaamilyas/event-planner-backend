@@ -54,7 +54,8 @@ model events {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user          users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  venue_booking venue_booking[]
 }
 
 model venues {
@@ -71,5 +72,19 @@ model venues {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  owner venue_managers @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  owner         venue_managers  @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  venue_booking venue_booking[]
+}
+
+model venue_booking {
+  id         Int       @id @default(autoincrement())
+  venue_id   Int
+  event_id   Int
+  phone      String?
+  date       DateTime?
+  start_time String?
+  end_time   String?
+
+  venue venues @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+  event events @relation(fields: [event_id], references: [id], onDelete: Cascade)
 }

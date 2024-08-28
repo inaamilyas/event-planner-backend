@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import path from "path";
+import getNearestVenues from "../utils/getNearestVenues.js";
 
 const prisma = new PrismaClient();
 
@@ -207,38 +209,67 @@ const updateProfile = async (req, res) => {
 };
 
 const getUserInformation = async (req, res) => {
+  console.log("getting information for user");
+
+  // Extract user ID from the headers
+  const userId = parseInt(req.headers["user_id"]);
+  console.log(req.headers["user_id"]);
+  
+
+
+  let { latitude, longitude, user_id } = req.body;
+  latitude = parseFloat(latitude);
+  longitude = parseFloat(longitude);
+
   try {
-    // Extract user ID from the headers
-    const userId = parseInt(req.headers["user-id"], 10);
-
-    // Fetch events and venues for the user
-    const [events, venues] = await Promise.all([
-      prisma.event.findMany({
-        where: { userId: userId },
-      }),
-      prisma.venue.findMany({
-        where: { userId: userId },
-      }),
-    ]);
-
-    const userInformation = await prisma.users.findFirst({
+    const user = await prisma.users.findFirst({
       where: {
-        id: userId,
+        id: parseInt(user_id),
+      },
+      include: {
         events: {
-          user_id: userId,
+          include:{
+            venue_booking:true,
+          }
         },
       },
     });
 
-    // const venues = getNearestVenues(userId); 
+    const venues = await getNearestVenues(latitude, longitude);
 
-    // format the data and send as response 
+    const userInfo = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      profile_pic: user.profile_pic,
+    };
+
+    const events = user.events.map((event) => ({
+      ...event,
+      picture: `/events/${path.basename(event.picture)}`,
+    }));
+
+    console.log(events);
+    
 
     // Return the results
-    res.json({ events, venues });
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Login successful",
+      data: {
+        user: userInfo,
+        events,
+        venues,
+      },
+    });
   } catch (error) {
     console.error("Error fetching user data:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
   }
 };
 

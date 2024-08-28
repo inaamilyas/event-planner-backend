@@ -24,7 +24,6 @@ router.put("/", updateVenue);
 router.delete("/", deleteVenue);
 router.get("/:venue_id", getVenueById);
 
-
 router.post("/booking/:venue_id", createBooking);
 // router.put("/booking/:venue_id", updateBooking);
 // router.delete("/booking/:venue_id", deleteBooking);
