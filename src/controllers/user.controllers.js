@@ -213,9 +213,6 @@ const getUserInformation = async (req, res) => {
 
   // Extract user ID from the headers
   const userId = parseInt(req.headers["user_id"]);
-  console.log(req.headers["user_id"]);
-  
-
 
   let { latitude, longitude, user_id } = req.body;
   latitude = parseFloat(latitude);
@@ -228,9 +225,13 @@ const getUserInformation = async (req, res) => {
       },
       include: {
         events: {
-          include:{
-            venue_booking:true,
-          }
+          include: {
+            venue_booking: {
+              include: {
+                venue: true,
+              },
+            },
+          },
         },
       },
     });
@@ -244,13 +245,18 @@ const getUserInformation = async (req, res) => {
       profile_pic: user.profile_pic,
     };
 
+    // console.log(user.events[0].venue_booking[0].venue);
     const events = user.events.map((event) => ({
       ...event,
+      date: new Date(event.date).toISOString().split("T")[0],
       picture: `/events/${path.basename(event.picture)}`,
+      venue_booking:
+        event.venue_booking.length > 0
+          ? // event.venue_booking[0].venue.length > 0
+            event.venue_booking[0].venue
+          : null,
     }));
-
-    console.log(events);
-    
+    console.log(events[0]);
 
     // Return the results
     res.status(200).json({
