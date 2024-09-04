@@ -2,12 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import path from "path";
 import getNearestVenues from "../utils/getNearestVenues.js";
+import { parse, format } from "date-fns";
 
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
-  const { name, email, password, confirmPassword } = req.body;
-
   // 1. Check for empty fields
   if (!name || !email || !password || !confirmPassword) {
     return res.status(400).json({
@@ -209,8 +208,6 @@ const updateProfile = async (req, res) => {
 };
 
 const getUserInformation = async (req, res) => {
-  console.log("getting information for user");
-
   // Extract user ID from the headers
   const userId = parseInt(req.headers["user_id"]);
 
@@ -246,17 +243,35 @@ const getUserInformation = async (req, res) => {
     };
 
     // console.log(user.events[0].venue_booking[0].venue);
-    const events = user.events.map((event) => ({
-      ...event,
-      date: new Date(event.date).toISOString().split("T")[0],
-      picture: `/events/${path.basename(event.picture)}`,
-      venue_booking:
-        event.venue_booking.length > 0
-          ? // event.venue_booking[0].venue.length > 0
-            event.venue_booking[0].venue
+    // const events = user.events.map((event) => ({
+    //   ...event,
+    //   date: new Date(event.date).toISOString().split("T")[0],
+    //   picture: `/events/${path.basename(event.picture)}`,
+    //   venue_booking:
+    //     event.venue_booking.length > 0
+    //       ? // event.venue_booking[0].venue.length > 0
+    //         event.venue_booking[0].venue
+    //       : null,
+    // }));
+
+    const events = user.events.map((event) => {
+      const eventDate = new Date(event.date);
+      const formattedDate = `${eventDate
+        .getDate()
+        .toString()
+        .padStart(2, "0")}/${(eventDate.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${eventDate.getFullYear()}`;
+      return {
+        ...event,
+        date: formattedDate,
+        picture: event.picture
+          ? `/events/${path.basename(event.picture)}`
           : null,
-    }));
-    console.log(events[0]);
+        venue_booking:
+          event.venue_booking.length > 0 ? event.venue_booking[0].venue : null,
+      };
+    });
 
     // Return the results
     res.status(200).json({

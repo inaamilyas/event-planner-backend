@@ -228,19 +228,9 @@ const updateVenue = async (req, res) => {
 const deleteVenue = async (req, res) => {
   const { id } = req.params;
 
-  // 1. Validate ID format
-  const venueId = parseInt(id, 10);
-  if (isNaN(venueId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid venue ID",
-    });
-  }
-
   try {
-    await prisma.venue.delete({
-      where: { id: venueId },
+    await prisma.venues.delete({
+      where: { id: parseInt(venueId) },
     });
 
     res.status(200).json({

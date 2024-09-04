@@ -1,26 +1,21 @@
 import { PrismaClient } from "@prisma/client";
+import path from "path";
 
 import { parse } from "date-fns";
 const prisma = new PrismaClient();
 
-
 // Convert date format to ISO 8601
-const formattedDate = parse('21/8/2024', 'd/M/yyyy', new Date());
+// const formattedDate = parse("21/8/2024", "d/M/yyyy", new Date());
 
 const createEvent = async (req, res) => {
-  console.log("create event");
-  
   const userId = 4;
   const picture = req.file ? req.file.path : null;
   const { name, time, date, no_of_guests, about, budget } = req.body;
 
-
-//   const formattedDate = new Date(date);
-  
+  //   const formattedDate = new Date(date);
 
   // 1. Check for empty fields
   if (!name || !time || !date || !no_of_guests || !about || !budget) {
-    
     return res.status(400).json({
       code: 400,
       status: "error",
@@ -33,16 +28,16 @@ const createEvent = async (req, res) => {
     const newEvent = await prisma.events.create({
       data: {
         name,
-        date: parse(date, 'd/M/yyyy', new Date()),
+        date: parse(date, "d/M/yyyy", new Date()),
         time,
-        no_of_guests:parseInt(no_of_guests),
+        no_of_guests: parseInt(no_of_guests),
         about,
         budget: budget ? parseFloat(budget) : null,
         user_id: userId,
         picture,
       },
     });
-    
+
     res.status(200).json({
       code: 200,
       status: "success",
@@ -102,73 +97,54 @@ const getEventById = async (req, res) => {
 };
 
 const updateEvent = async (req, res) => {
+  console.log("inside update event");
+
   const { id } = req.params;
-  const { title, description, date, location } = req.body;
+  const picture = req.file ? req.file.path : null;
+  const { name, time, date, no_of_guests, about, budget } = req.body;
 
-  // 1. Validate ID format
-  const eventId = parseInt(id, 10);
-  if (isNaN(eventId)) {
+  // 1. Check for empty fields
+  if (!name || !time || !date || !no_of_guests || !about || !budget) {
     return res.status(400).json({
       code: 400,
       status: "error",
-      message: "Invalid event ID",
+      message: "data is missing",
+      data: null,
     });
   }
 
-  // 2. Check for empty fields
-  if (!title || !date || !location) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Title, date, and location are required",
-    });
-  }
-
-  // 3. Validate title and location format
-  if (typeof title !== "string" || typeof location !== "string") {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Title and location must be strings",
-    });
-  }
-
-  // 4. Validate date format
-  if (isNaN(Date.parse(date))) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid date format",
-    });
+  const data = {
+    name,
+    date: parse(date, "d/M/yyyy", new Date()),
+    time,
+    no_of_guests: parseInt(no_of_guests),
+    about,
+    budget: budget ? parseFloat(budget) : null,
+  };
+  if (picture) {
+    data.picture = picture;
   }
 
   try {
-    const updatedEvent = await prisma.event.update({
-      where: { id: eventId },
-      data: {
-        title,
-        description,
-        date: new Date(date),
-        location,
+    const updatedEvent = await prisma.events.update({
+      where: {
+        id: parseInt(id),
       },
+      data,
     });
+
+    console.log(updatedEvent);
 
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Event updated successfully",
-      data: updatedEvent,
+      data: updatedEvent.picture
+        ? `/events/${path.basename(updatedEvent.picture)}`
+        : null,
     });
   } catch (error) {
-    if (error.code === "P2025") {
-      // Prisma error code for "Record not found"
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Event not found",
-      });
-    }
-    console.error("Error updating event: ", error);
+    console.error("Error creating event: ", error);
     res.status(500).json({
       code: 500,
       status: "error",
@@ -178,21 +154,14 @@ const updateEvent = async (req, res) => {
 };
 
 const deleteEvent = async (req, res) => {
-  const { id } = req.params;
+  console.log("inside");
 
-  // 1. Validate ID format
-  const eventId = parseInt(id, 10);
-  if (isNaN(eventId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid event ID",
-    });
-  }
+  const { id } = req.params;
+  console.log(id);
 
   try {
-    await prisma.event.delete({
-      where: { id: eventId },
+    const item = await prisma.events.delete({
+      where: { id: parseInt(id) },
     });
 
     res.status(200).json({
@@ -201,14 +170,6 @@ const deleteEvent = async (req, res) => {
       message: "Event deleted successfully",
     });
   } catch (error) {
-    if (error.code === "P2025") {
-      // Prisma error code for "Record not found"
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Event not found",
-      });
-    }
     console.error("Error deleting event: ", error);
     res.status(500).json({
       code: 500,
