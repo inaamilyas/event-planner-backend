@@ -97,7 +97,7 @@ const getEventById = async (req, res) => {
 };
 
 const updateEvent = async (req, res) => {
-  console.log("inside update event");
+  console.log("inside update venue");
 
   const { id } = req.params;
   const picture = req.file ? req.file.path : null;

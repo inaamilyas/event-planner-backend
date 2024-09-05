@@ -1,5 +1,6 @@
 import axios from "axios";
 import { parse } from "date-fns";
+import path from "path";
 import getAddressbyCoordinates from "../utils/getAddressByCoordinates.js";
 
 import { PrismaClient } from "@prisma/client";
@@ -142,95 +143,62 @@ const getVenueById = async (req, res) => {
 
 const updateVenue = async (req, res) => {
   const { id } = req.params;
-  const { name, address, capacity, description } = req.body;
-
-  // 1. Validate ID format
-  const venueId = parseInt(id, 10);
-  if (isNaN(venueId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid venue ID",
-    });
-  }
-
-  // 2. Check for empty fields
-  if (!name || !address || !capacity) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Name, address, and capacity are required",
-    });
-  }
-
-  // 3. Validate name and address format
-  if (typeof name !== "string" || typeof address !== "string") {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Name and address must be strings",
-    });
-  }
-
-  // 4. Validate capacity
-  if (!Number.isInteger(capacity) || capacity <= 0) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Capacity must be a positive integer",
-    });
-  }
-
-  // 5. Validate description format
-  if (description && typeof description !== "string") {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Description must be a string",
-    });
-  }
+  console.log("inside update venue");
+  const { name, about, latitude, longitude, phone } = req.body;
 
   try {
-    const updatedVenue = await prisma.venue.update({
-      where: { id: venueId },
-      data: {
-        name,
-        address,
-        capacity,
-        description,
+    // Get the image file path from req.file
+    const imagePath = req.file ? req.file.path : null;
+
+    const address = await getAddressbyCoordinates(latitude, longitude);
+    const data = {
+      name,
+      address,
+      about,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      phone: phone.toString(),
+    };
+
+    if (imagePath) {
+      data.picture = imagePath;
+    }
+
+    const updatedVenue = await prisma.venues.update({
+      where: {
+        id: parseInt(id),
       },
+      data,
     });
 
     res.status(200).json({
       code: 200,
       status: "success",
-      message: "Venue updated successfully",
-      data: updatedVenue,
+      message: "Venue created successfully",
+      data: {
+        ...updatedVenue,
+        picture: `/venues/${path.basename(updatedVenue.picture)}`,
+      },
     });
   } catch (error) {
-    if (error.code === "P2025") {
-      // Prisma error code for "Record not found"
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Venue not found",
-      });
-    }
-    console.error("Error updating venue: ", error);
+    console.error("Error creating venue: ", error);
     res.status(500).json({
       code: 500,
       status: "error",
       message: "Internal server error",
+      data: null,
     });
   }
 };
 
 const deleteVenue = async (req, res) => {
+  console.log("inside delete");
+  
   const { id } = req.params;
 
   try {
     await prisma.venues.delete({
-      where: { id: parseInt(venueId) },
+      where: { id: parseInt(id) },
     });
 
     res.status(200).json({
@@ -239,14 +207,6 @@ const deleteVenue = async (req, res) => {
       message: "Venue deleted successfully",
     });
   } catch (error) {
-    if (error.code === "P2025") {
-      // Prisma error code for "Record not found"
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Venue not found",
-      });
-    }
     console.error("Error deleting venue: ", error);
     res.status(500).json({
       code: 500,
@@ -265,9 +225,9 @@ const createBooking = async (req, res) => {
   console.log(req.body);
 
   // 1. Check for empty fields
-  if (date=== "" || start_time=== "" || end_time === "" || event_id === "" ) {
+  if (date === "" || start_time === "" || end_time === "" || event_id === "") {
     console.log("inside if");
-    
+
     return res.status(400).json({
       code: 401,
       status: "error",
@@ -280,7 +240,7 @@ const createBooking = async (req, res) => {
       data: {
         venue_id: parseInt(venue_id),
         event_id: parseInt(event_id),
-        date: parse(date, 'd/M/yyyy', new Date()),
+        date: parse(date, "d/M/yyyy", new Date()),
         start_time,
         end_time,
         phone,
