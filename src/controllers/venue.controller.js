@@ -637,15 +637,15 @@ const suggestVenuesBasedOnWeather = async (req, res) => {
     const venues = await prisma.venues.findMany({
       where: {
         type: {
-          in: preferredVenueTypes, // Assuming 'type' is a field in your venues table
+          in: preferredVenueTypes,
         },
       },
       include: {
-        address: true, // Include address or any other related data if needed
+        address: true,
       },
     });
 
-    // 5. Calculate distance using the Haversine formula (as shown in the previous answer)
+    // 5. Calculate distance using the Haversine formula
     const haversine = (lat1, lon1, lat2, lon2) => {
       const toRad = (angle) => (Math.PI / 180) * angle;
       const R = 6371; // Radius of the Earth in km

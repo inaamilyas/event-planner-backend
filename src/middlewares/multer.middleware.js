@@ -24,6 +24,8 @@ const storage = multer.diskStorage({
       cb(null, "./public/events");
     } else if (req.originalUrl.includes("venues")) {
       cb(null, "./public/venues");
+    } else if (req.originalUrl.includes("food-menu")) {
+      cb(null, "./public/foodItems");
     } else {
       cb(null, "./public/others"); // Handle the case where the path is not recognized
     }
