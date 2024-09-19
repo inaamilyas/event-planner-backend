@@ -8,6 +8,8 @@ const prisma = new PrismaClient();
 // const formattedDate = parse("21/8/2024", "d/M/yyyy", new Date());
 
 const createEvent = async (req, res) => {
+  console.log("inside create event");
+  
   const userId = 4;
   const picture = req.file ? req.file.path : null;
   const { name, time, date, no_of_guests, about, budget } = req.body;
@@ -154,7 +156,7 @@ const updateEvent = async (req, res) => {
 };
 
 const deleteEvent = async (req, res) => {
-  console.log("inside");
+  console.log("inside delete event");
 
   const { id } = req.params;
   console.log(id);

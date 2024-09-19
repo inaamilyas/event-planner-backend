@@ -14,6 +14,7 @@ const getNearestVenues = async (latitude, longitude) => {
           profile_pic: true,
         },
       },
+      venue_food_menu:true
     },
   });
 
@@ -51,7 +52,12 @@ const getNearestVenues = async (latitude, longitude) => {
       haversine(latitude, longitude, venue.latitude, venue.longitude)
     ),
     picture: `/venues/${path.basename(venue.picture)}`,
+    venue_food_menu: venue.venue_food_menu.map((menuItem) => ({
+      ...menuItem,
+      picture: `/foodItems/${path.basename(menuItem.picture)}`,
+    })),
   }));
+  
 
   // Sort venues by distance
   venuesWithDistance.sort(

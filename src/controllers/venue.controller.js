@@ -7,11 +7,14 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const getAllVenues = async (req, res) => {
+  console.log("inside get all venues");
+  const { manager_id } = req.headers;
+  
   try {
     const venues = await prisma.venues.findMany({
       where: {
         owner: {
-          email: "inam@inam.com",
+          id: parseInt(manager_id),
         },
       },
       include: {
@@ -24,6 +27,7 @@ const getAllVenues = async (req, res) => {
             profile_pic: true,
           },
         },
+        venue_food_menu:true
       },
     });
 
@@ -32,6 +36,12 @@ const getAllVenues = async (req, res) => {
       return {
         ...venue,
         picture: `/venues/${path.basename(venue.picture)}`,
+        venue_food_menu: venue.venue_food_menu.map((item)=>{
+          return {
+            ...item,
+            picture: `/foodItems/${path.basename(item.picture)}`,
+          }
+        })
       };
     });
 
@@ -56,11 +66,11 @@ const getAllVenues = async (req, res) => {
 
 const createVenue = async (req, res) => {
   console.log("inside create venue");
-  const { name, about, latitude, longitude, phone } = req.body;
+  const { name, about, latitude, longitude, phone, manager_id } = req.body;
 
   const owner = await prisma.venue_managers.findFirst({
     where: {
-      email: "inam@inam.com",
+      id: parseInt(manager_id),
     },
   });
 
@@ -192,8 +202,8 @@ const updateVenue = async (req, res) => {
 };
 
 const deleteVenue = async (req, res) => {
-  console.log("inside delete");
-  
+  console.log("inside delete venues");
+
   const { id } = req.params;
 
   try {
@@ -217,7 +227,7 @@ const deleteVenue = async (req, res) => {
 };
 
 const createBooking = async (req, res) => {
-  console.log("create booking");
+  console.log("create venue booking");
 
   const { venue_id } = req.params;
   const { date, start_time, end_time, event_id, phone } = req.body;
@@ -253,7 +263,7 @@ const createBooking = async (req, res) => {
       code: 200,
       status: "success",
       message: "Booking created successfully",
-      data: null,
+      data: newBooking.id,
     });
   } catch (error) {
     console.error("Error creating booking: ", error);

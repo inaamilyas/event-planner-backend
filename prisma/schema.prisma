@@ -82,7 +82,6 @@ model venue_booking {
   event_id      Int
   phone         String?
   date          DateTime?
-  food_menu     Int
   start_time    String?
   end_time      String?
 
@@ -96,7 +95,7 @@ model venue_food_menu {
   venue_id     Int
   name         String?
   price        String?
-  is_available Boolean?
+  is_available Boolean? @default(true)
   picture      String?
 
   venue        venues             @relation(fields: [venue_id], references: [id], onDelete: Cascade)
@@ -106,6 +105,7 @@ model venue_food_menu {
 model booking_food_menu {
   id             Int              @id @default(autoincrement())
   booking_id     Int
+  quantity Int?
   food_menu_id   Int
 
   venue_booking  venue_booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)

@@ -7,6 +7,8 @@ import { parse, format } from "date-fns";
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
+  console.log("inside sign up");
+  const {name, email, password, confirmPassword} = req.body;
   // 1. Check for empty fields
   if (!name || !email || !password || !confirmPassword) {
     return res.status(400).json({
@@ -90,6 +92,7 @@ const signup = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  console.log("inside login");
   const { email, password } = req.body;
 
   // 1. Check for empty fields
@@ -165,6 +168,7 @@ const login = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
+  console.log("inside update profile");
   try {
     const { fullname, email, password } = req.body;
     const profilePic = req.file ? req.file.filename : null;
@@ -208,6 +212,7 @@ const updateProfile = async (req, res) => {
 };
 
 const getUserInformation = async (req, res) => {
+  console.log("inside get user information");
   // Extract user ID from the headers
   const userId = parseInt(req.headers["user_id"]);
 

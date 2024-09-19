@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
+  console.log("inside manager sign up");
   const { name, email, phone, password, confirmPassword } = req.body;
 
   // 1. Check for empty fields
@@ -92,6 +93,7 @@ const signup = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  console.log("inside manager login");
   const { email, password } = req.body;
 
   // 1. Check for empty fields

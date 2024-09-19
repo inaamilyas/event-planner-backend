@@ -1,4 +1,4 @@
-import path, { parse } from "path";
+import path from "path";
 
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
@@ -38,25 +38,30 @@ const getFoodItemsByVenue = async (req, res) => {
 };
 
 const addFoodItemForVenue = async (req, res) => {
+  console.log("calling add food item for venue");
+
   const { venue_id } = req.params;
   const { name, price } = req.body;
   const imagePath = req.file ? req.file.path : null;
-  
+
   try {
     const foodItems = await prisma.venue_food_menu.create({
       data: {
         name,
         price,
-        picture:imagePath,
+        picture: imagePath,
         venue_id: parseInt(venue_id),
       },
     });
+
+    console.log(foodItems);
+    
 
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Food Item added successfully",
-      data: foodItems,
+      data: {...foodItems,  picture: `/foodItems/${path.basename(foodItems.picture)}`,},
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
@@ -113,7 +118,11 @@ const updateFoodItemForVenue = async (req, res) => {
 };
 
 const deleteFoodItemForVenue = async (req, res) => {
+  console.log("inside food menu delete");
+  
   const { id } = req.params;
+  console.log(id);
+  
   try {
     const foodItems = await prisma.venue_food_menu.delete({
       where: {
@@ -139,67 +148,83 @@ const deleteFoodItemForVenue = async (req, res) => {
 };
 
 const saveFoodItemsForBooking = async (req, res) => {
-    try {
-      // Extract booking_id and menu_item_ids from request body
-      const { booking_id, menu_item_ids } = req.body;
-  
-      // Validate input
-      if (!booking_id || !Array.isArray(menu_item_ids) || menu_item_ids.length === 0) {
-        return res.status(400).json({
-          code: 400,
-          status: 'error',
-          message: 'Booking ID and an array of menu item IDs are required.',
-        });
-      }
-  
-      // Check if the booking exists
-      const bookingExists = await prisma.venue_booking.findUnique({
-        where: { id: booking_id },
+  console.log("inside save  food items");
+  // try {
+  // Extract booking_id and menu_item_ids from request body
+  const { booking_id, menu_item_ids } = req.body;
+
+  // Check if the booking exists
+  const bookingExists = await prisma.venue_booking.findFirst({
+    where: { id: parseInt(booking_id) },
+  });
+
+  if (!bookingExists) {
+    return res.status(404).json({
+      code: 404,
+      status: "error",
+      message: "Booking not found.",
+    });
+  }
+
+  const bookedMenuItems = await Promise.all(
+    Object.entries(menu_item_ids).map(async ([menuItemId, quantity]) => {
+      const existingItem = await prisma.booking_food_menu.findUnique({
+        where: {
+          booking_id_food_menu_id: {
+            booking_id: booking_id,
+            food_menu_id: parseInt(menuItemId),
+          },
+        },
       });
-  
-      if (!bookingExists) {
-        return res.status(404).json({
-          code: 404,
-          status: 'error',
-          message: 'Booking not found.',
+
+      if (!existingItem) {
+        return prisma.booking_food_menu.create({
+          data: {
+            booking_id: booking_id,
+            food_menu_id: parseInt(menuItemId),
+            quantity: quantity,
+          },
         });
-      }
-  
-      // Create records in the booking_food_menu junction table
-      const bookedMenuItems = await Promise.all(
-        menu_item_ids.map((menuItemId) =>
-          prisma.booking_food_menu.create({
-            data: {
+      } else {
+        // Optionally, update the existing item if you need to modify the quantity
+        return prisma.booking_food_menu.update({
+          where: {
+            booking_id_food_menu_id: {
               booking_id: booking_id,
-              food_menu_id: menuItemId,
+              food_menu_id: parseInt(menuItemId),
             },
-          })
-        )
-      );
-  
-      // Respond with success
-      res.status(201).json({
-        code: 201,
-        status: 'success',
-        message: 'Menu items successfully booked.',
-        data: bookedMenuItems,
-      });
-    } catch (error) {
-      console.error('Error booking menu items:', error);
-      res.status(500).json({
-        code: 500,
-        status: 'error',
-        message: 'An error occurred while booking menu items.',
-      });
-    }
-  };
+          },
+          data: {
+            quantity: existingItem.quantity + quantity, // Update the quantity
+          },
+        });
+      }
+    })
+  );
 
+  console.log(bookedMenuItems);
 
+  // Respond with success
+  res.status(201).json({
+    code: 201,
+    status: "success",
+    message: "Menu items successfully booked.",
+    // data: bookedMenuItems,
+  });
+  // } catch (error) {
+  //   console.error("Error booking menu items:", error);
+  //   res.status(500).json({
+  //     code: 500,
+  //     status: "error",
+  //     message: "An error occurred while booking menu items.",
+  //   });
+  // }
+};
 
 export {
   getFoodItemsByVenue,
   addFoodItemForVenue,
   updateFoodItemForVenue,
   deleteFoodItemForVenue,
-  saveFoodItemsForBooking
+  saveFoodItemsForBooking,
 };
