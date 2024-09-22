@@ -55,13 +55,15 @@ const addFoodItemForVenue = async (req, res) => {
     });
 
     console.log(foodItems);
-    
 
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Food Item added successfully",
-      data: {...foodItems,  picture: `/foodItems/${path.basename(foodItems.picture)}`,},
+      data: {
+        ...foodItems,
+        picture: `/foodItems/${path.basename(foodItems.picture)}`,
+      },
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
@@ -75,6 +77,8 @@ const addFoodItemForVenue = async (req, res) => {
 };
 
 const updateFoodItemForVenue = async (req, res) => {
+  console.log("inside update menu item");
+
   const { id } = req.params;
   const { name, price } = req.body;
 
@@ -89,8 +93,9 @@ const updateFoodItemForVenue = async (req, res) => {
       data.price = price;
     }
 
-    if (req.file) {
-      data.picture = req.file;
+    const imagePath = req.file ? req.file.path : null;
+    if (imagePath) {
+      data.picture = imagePath;
     }
 
     const foodItems = await prisma.venue_food_menu.update({
@@ -100,11 +105,16 @@ const updateFoodItemForVenue = async (req, res) => {
       data,
     });
 
+    console.log(foodItems);
+
     res.status(200).json({
       code: 200,
       status: "success",
-      message: "Food Item added successfully",
-      data: foodItems,
+      message: "Food Item updated successfully",
+      data: {
+        ...foodItems,
+        picture: `/foodItems/${path.basename(foodItems.picture)}`,
+      },  
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
@@ -119,10 +129,10 @@ const updateFoodItemForVenue = async (req, res) => {
 
 const deleteFoodItemForVenue = async (req, res) => {
   console.log("inside food menu delete");
-  
+
   const { id } = req.params;
   console.log(id);
-  
+
   try {
     const foodItems = await prisma.venue_food_menu.delete({
       where: {
