@@ -262,7 +262,7 @@ const getUserInformation = async (req, res) => {
     //       : null,
     // }));
 
-    const events = user.events.map((event) => {
+    const events = user.events?.map((event) => {
       const eventDate = new Date(event.date);
       const formattedDate = `${eventDate
         .getDate()
@@ -281,13 +281,15 @@ const getUserInformation = async (req, res) => {
             ? {
                 ...event.venue_booking[0]?.venue,
                 venue_food_menu:
-                  venue_food_menu.length > 0
-                    ? venue_food_menu?.map((item) => ({
-                        ...item,
-                        picture: item?.picture
-                          ? `/foodItems/${path.basename(item.picture)}`
-                          : null,
-                      }))
+                  event.venue_booking[0]?.venue.venue_food_menu.length > 0
+                    ? event.venue_booking[0]?.venue.venue_food_menu?.map(
+                        (item) => ({
+                          ...item,
+                          picture: item?.picture
+                            ? `/foodItems/${path.basename(item.picture)}`
+                            : null,
+                        })
+                      )
                     : null,
               }
             : null,
