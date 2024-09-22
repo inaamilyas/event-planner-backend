@@ -110,6 +110,7 @@ const createVenue = async (req, res) => {
 
 const getVenueById = async (req, res) => {
   const { id } = req.params;
+  console.log("get venue by id", id);
 
   try {
     const venue = await prisma.venues.findFirst({
