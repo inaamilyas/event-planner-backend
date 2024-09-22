@@ -228,6 +228,10 @@ const getUserInformation = async (req, res) => {
         events: {
           include: {
             venue_booking: {
+              take: 1,
+              orderBy: {
+                created_at: 'desc',
+              },
               include: {
                 venue: true,
                 bookingFoodMenu: {
@@ -251,7 +255,7 @@ const getUserInformation = async (req, res) => {
       profile_pic: user.profile_pic,
     };
 
-    // console.log(user.events[0].venue_booking[0].venue);
+    // console.log(user.events[0].venue_booking);
     // const events = user.events.map((event) => ({
     //   ...event,
     //   date: new Date(event.date).toISOString().split("T")[0],

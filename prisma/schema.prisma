@@ -84,6 +84,9 @@ model venue_booking {
   date          DateTime?
   start_time    String?
   end_time      String?
+   created_at DateTime @default(now())
+  updated_at DateTime @updatedAt @default(now())
+  
 
   venue         venues             @relation(fields: [venue_id], references: [id], onDelete: Cascade)
   event         events             @relation(fields: [event_id], references: [id], onDelete: Cascade)
