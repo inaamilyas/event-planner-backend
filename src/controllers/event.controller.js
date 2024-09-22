@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 // Convert date format to ISO 8601
 // const formattedDate = parse("21/8/2024", "d/M/yyyy", new Date());
 
+// used 
 const createEvent = async (req, res) => {
   console.log("inside create event");
   
@@ -56,47 +57,47 @@ const createEvent = async (req, res) => {
   }
 };
 
-const getEventById = async (req, res) => {
-  const { id } = req.params;
+// const getEventById = async (req, res) => {
+//   const { id } = req.params;
 
-  // 1. Validate ID format
-  const eventId = parseInt(id, 10);
-  if (isNaN(eventId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid event ID",
-    });
-  }
+//   // 1. Validate ID format
+//   const eventId = parseInt(id, 10);
+//   if (isNaN(eventId)) {
+//     return res.status(400).json({
+//       code: 400,
+//       status: "error",
+//       message: "Invalid event ID",
+//     });
+//   }
 
-  try {
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-    });
+//   try {
+//     const event = await prisma.event.findUnique({
+//       where: { id: eventId },
+//     });
 
-    if (!event) {
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Event not found",
-      });
-    }
+//     if (!event) {
+//       return res.status(404).json({
+//         code: 404,
+//         status: "error",
+//         message: "Event not found",
+//       });
+//     }
 
-    res.status(200).json({
-      code: 200,
-      status: "success",
-      message: "Event retrieved successfully",
-      data: event,
-    });
-  } catch (error) {
-    console.error("Error retrieving event: ", error);
-    res.status(500).json({
-      code: 500,
-      status: "error",
-      message: "Internal server error",
-    });
-  }
-};
+//     res.status(200).json({
+//       code: 200,
+//       status: "success",
+//       message: "Event retrieved successfully",
+//       data: event,
+//     });
+//   } catch (error) {
+//     console.error("Error retrieving event: ", error);
+//     res.status(500).json({
+//       code: 500,
+//       status: "error",
+//       message: "Internal server error",
+//     });
+//   }
+// };
 
 const updateEvent = async (req, res) => {
   console.log("inside update venue");
@@ -181,50 +182,50 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-const listUserEvents = async (req, res) => {
-  const { userId } = req.body; // Assuming userId is passed in the request body or you can use req.userId if the user is authenticated
+// const listUserEvents = async (req, res) => {
+//   const { userId } = req.body; // Assuming userId is passed in the request body or you can use req.userId if the user is authenticated
 
-  // 1. Validate user ID
-  if (!Number.isInteger(userId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid user ID",
-    });
-  }
+//   // 1. Validate user ID
+//   if (!Number.isInteger(userId)) {
+//     return res.status(400).json({
+//       code: 400,
+//       status: "error",
+//       message: "Invalid user ID",
+//     });
+//   }
 
-  try {
-    // 2. Fetch all events created by the user
-    const events = await prisma.event.findMany({
-      where: { userId },
-      include: {
-        venue: true, // Include related venue information if needed
-        guests: true, // Include related guests information if needed
-      },
-    });
+//   try {
+//     // 2. Fetch all events created by the user
+//     const events = await prisma.event.findMany({
+//       where: { userId },
+//       include: {
+//         venue: true, // Include related venue information if needed
+//         guests: true, // Include related guests information if needed
+//       },
+//     });
 
-    if (events.length === 0) {
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "No events found for this user",
-      });
-    }
+//     if (events.length === 0) {
+//       return res.status(404).json({
+//         code: 404,
+//         status: "error",
+//         message: "No events found for this user",
+//       });
+//     }
 
-    res.status(200).json({
-      code: 200,
-      status: "success",
-      message: "Events retrieved successfully",
-      data: events,
-    });
-  } catch (error) {
-    console.error("Error retrieving events: ", error);
-    res.status(500).json({
-      code: 500,
-      status: "error",
-      message: "Internal server error",
-    });
-  }
-};
+//     res.status(200).json({
+//       code: 200,
+//       status: "success",
+//       message: "Events retrieved successfully",
+//       data: events,
+//     });
+//   } catch (error) {
+//     console.error("Error retrieving events: ", error);
+//     res.status(500).json({
+//       code: 500,
+//       status: "error",
+//       message: "Internal server error",
+//     });
+//   }
+// };
 
-export { createEvent, updateEvent, getEventById, deleteEvent, listUserEvents };
+export { createEvent, updateEvent, deleteEvent };

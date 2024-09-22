@@ -3,39 +3,39 @@ import path from "path";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const getFoodItemsByVenue = async (req, res) => {
-  const { venue_id } = req.params;
-  try {
-    const foodItems = await prisma.venue_food_menu.findMany({
-      where: {
-        venue_id: parseInt(venue_id),
-      },
-    });
+// const getFoodItemsByVenue = async (req, res) => {
+//   const { venue_id } = req.params;
+//   try {
+//     const foodItems = await prisma.venue_food_menu.findMany({
+//       where: {
+//         venue_id: parseInt(venue_id),
+//       },
+//     });
 
-    // Update the picture paths to URLs
-    const updatedItems = foodItems.map((item) => {
-      return {
-        ...item,
-        picture: `/foodItems/${path.basename(item.picture)}`,
-      };
-    });
+//     // Update the picture paths to URLs
+//     const updatedItems = foodItems.map((item) => {
+//       return {
+//         ...item,
+//         picture: `/foodItems/${path.basename(item.picture)}`,
+//       };
+//     });
 
-    res.status(200).json({
-      code: 200,
-      status: "success",
-      message: "Venue fetched successfully",
-      data: updatedItems,
-    });
-  } catch (error) {
-    console.error("Error creating venue: ", error);
-    res.status(500).json({
-      code: 500,
-      status: "error",
-      message: "Internal server error",
-      data: null,
-    });
-  }
-};
+//     res.status(200).json({
+//       code: 200,
+//       status: "success",
+//       message: "Venue fetched successfully",
+//       data: updatedItems,
+//     });
+//   } catch (error) {
+//     console.error("Error creating venue: ", error);
+//     res.status(500).json({
+//       code: 500,
+//       status: "error",
+//       message: "Internal server error",
+//       data: null,
+//     });
+//   }
+// };
 
 const addFoodItemForVenue = async (req, res) => {
   console.log("calling add food item for venue");
@@ -232,7 +232,7 @@ const saveFoodItemsForBooking = async (req, res) => {
 };
 
 export {
-  getFoodItemsByVenue,
+  // getFoodItemsByVenue,
   addFoodItemForVenue,
   updateFoodItemForVenue,
   deleteFoodItemForVenue,

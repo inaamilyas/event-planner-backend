@@ -2,13 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import path from "path";
 import getNearestVenues from "../utils/getNearestVenues.js";
-import { parse, format } from "date-fns";
 
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
   console.log("inside sign up");
-  const {name, email, password, confirmPassword} = req.body;
+  const { name, email, password, confirmPassword } = req.body;
   // 1. Check for empty fields
   if (!name || !email || !password || !confirmPassword) {
     return res.status(400).json({
