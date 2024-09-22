@@ -11,9 +11,10 @@ const prisma = new PrismaClient();
 const createEvent = async (req, res) => {
   console.log("inside create event");
   
-  const userId = 4;
+  const {user_id} = req?.headers;
+  const userId = parseInt(user_id);
   const picture = req.file ? req.file.path : null;
-  const { name, time, date, no_of_guests, about, budget } = req.body;
+  const { name, time, date, no_of_guests, about, budget } = req?.body;
 
   //   const formattedDate = new Date(date);
 

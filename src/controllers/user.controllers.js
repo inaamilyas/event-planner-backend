@@ -213,9 +213,9 @@ const updateProfile = async (req, res) => {
 const getUserInformation = async (req, res) => {
   console.log("inside get user information");
   // Extract user ID from the headers
-  const userId = parseInt(req.headers["user_id"]);
+  const user_id = parseInt(req.headers["user_id"]);
 
-  let { latitude, longitude, user_id } = req.body;
+  let { latitude, longitude } = req.body;
   latitude = parseFloat(latitude);
   longitude = parseFloat(longitude);
 
