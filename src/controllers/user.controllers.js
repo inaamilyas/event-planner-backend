@@ -229,7 +229,11 @@ const getUserInformation = async (req, res) => {
           include: {
             venue_booking: {
               include: {
-                venue: true,
+                venue: {
+                  include: {
+                    venue_food_menu: true,
+                  },
+                },
               },
             },
           },
@@ -273,7 +277,17 @@ const getUserInformation = async (req, res) => {
           ? `/events/${path.basename(event.picture)}`
           : null,
         venue_booking:
-          event.venue_booking.length > 0 ? event.venue_booking[0].venue : null,
+          event.venue_booking.length > 0
+            ? event.venue_booking[0].venue.map((venue) => {
+                return {
+                  ...venue,
+                  venue_food_menu: venue_food_menu.map((item) => ({
+                    ...item,
+                    picture: `/foodItems/${path.basename(item.picture)}`,
+                  })),
+                };
+              })
+            : null,
       };
     });
 
