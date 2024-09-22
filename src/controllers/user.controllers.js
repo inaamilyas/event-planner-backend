@@ -229,7 +229,8 @@ const getUserInformation = async (req, res) => {
           include: {
             venue_booking: {
               include: {
-                venue: {
+                venue: true,
+                bookingFoodMenu: {
                   include: {
                     venue_food_menu: true,
                   },
@@ -262,6 +263,8 @@ const getUserInformation = async (req, res) => {
     //       : null,
     // }));
 
+    // console.log(user?.events[0].venue_booking[0]?.bookingFoodMenu);
+
     const events = user.events?.map((event) => {
       const eventDate = new Date(event.date);
       const formattedDate = `${eventDate
@@ -277,22 +280,42 @@ const getUserInformation = async (req, res) => {
           ? `/events/${path.basename(event.picture)}`
           : null,
         venue_booking:
-          event.venue_booking.length > 0
+          event.venue_booking?.length > 0
             ? {
-                ...event.venue_booking[0]?.venue,
-                venue_food_menu:
-                  event.venue_booking[0]?.venue.venue_food_menu.length > 0
-                    ? event.venue_booking[0]?.venue.venue_food_menu?.map(
-                        (item) => ({
-                          ...item,
-                          picture: item?.picture
-                            ? `/foodItems/${path.basename(item.picture)}`
-                            : null,
-                        })
-                      )
-                    : null,
+                ...event.venue_booking[0].venue,
+                venue_food_menu: event.venue_booking[0].bookingFoodMenu?.map(
+                  (item) => {
+                    return {
+                      // ...item,
+                      id: item.id,
+                      quantity: item.quantity,
+                      name: item.venue_food_menu.name,
+                      price: item.venue_food_menu.price,
+                      picture: item.venue_food_menu.picture
+                        ? `/foodItems/${path.basename(
+                            item.venue_food_menu.picture
+                          )}`
+                        : null,
+                    };
+                  }
+                ),
               }
             : null,
+        // bookingFoodMenu: event.bookingFoodMenu?.map((item) => {
+        //   return {
+        //     ...item,
+        //     venue_food_menu: item.venue_food_menu
+        //       ? {
+        //           ...item.venue_food_menu,
+        //           picture: item.venue_food_menu.picture
+        //             ? `/foodItems/${path.basename(
+        //                 item.venue_food_menu.picture
+        //               )}`
+        //             : null,
+        //         }
+        //       : null,
+        //   };
+        // }),
       };
     });
 
