@@ -111,37 +111,39 @@ const createVenue = async (req, res) => {
 const getVenueById = async (req, res) => {
   const { id } = req.params;
 
-  // 1. Validate ID format
-  const venueId = parseInt(id, 10);
-  if (isNaN(venueId)) {
-    return res.status(400).json({
-      code: 400,
-      status: "error",
-      message: "Invalid venue ID",
-    });
-  }
-
   try {
-    const venue = await prisma.venue.findUnique({
-      where: { id: venueId },
+    const venue = await prisma.venues.findFirst({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            profile_pic: true,
+          },
+        },
+        venue_food_menu: true,
+      },
     });
-
-    if (!venue) {
-      return res.status(404).json({
-        code: 404,
-        status: "error",
-        message: "Venue not found",
-      });
-    }
 
     res.status(200).json({
       code: 200,
       status: "success",
-      message: "Venue retrieved successfully",
-      data: venue,
+      message: "Venue details fetched successfully",
+      data: {
+        ...venue,
+        picture: `/venues/${path.basename(venue.picture)}`,
+        venue_food_menu: venue.venue_food_menu.map((menuItem) => ({
+          ...menuItem,
+          picture: `/foodItems/${path.basename(menuItem.picture)}`,
+        })),
+      },
     });
   } catch (error) {
-    console.error("Error retrieving venue: ", error);
+    console.error("Error creating booking: ", error);
     res.status(500).json({
       code: 500,
       status: "error",
@@ -274,49 +276,49 @@ const createBooking = async (req, res) => {
   }
 };
 
-const getBookingById = async (req, res) => {
-  const { id } = req.params;
+// const getBookingById = async (req, res) => {
+//   const { id } = req.params;
 
-  try {
-    const venue = await prisma.venues.findFirst({
-      where: {
-        id: parseInt(id),
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            profile_pic: true,
-          },
-        },
-        venue_food_menu: true,
-      },
-    });
+//   try {
+//     const venue = await prisma.venues.findFirst({
+//       where: {
+//         id: parseInt(id),
+//       },
+//       include: {
+//         owner: {
+//           select: {
+//             id: true,
+//             name: true,
+//             phone: true,
+//             profile_pic: true,
+//           },
+//         },
+//         venue_food_menu: true,
+//       },
+//     });
 
-    res.status(200).json({
-      code: 200,
-      status: "success",
-      message: "Venue details fetched successfully",
-      data: {
-        ...venue,
-        picture: `/venues/${path.basename(venue.picture)}`,
-        venue_food_menu: venue.venue_food_menu.map((menuItem) => ({
-          ...menuItem,
-          picture: `/foodItems/${path.basename(menuItem.picture)}`,
-        })),
-      },
-    });
-  } catch (error) {
-    console.error("Error creating booking: ", error);
-    res.status(500).json({
-      code: 500,
-      status: "error",
-      message: "Internal server error",
-    });
-  }
-};
+//     res.status(200).json({
+//       code: 200,
+//       status: "success",
+//       message: "Venue details fetched successfully",
+//       data: {
+//         ...venue,
+//         picture: `/venues/${path.basename(venue.picture)}`,
+//         venue_food_menu: venue.venue_food_menu.map((menuItem) => ({
+//           ...menuItem,
+//           picture: `/foodItems/${path.basename(menuItem.picture)}`,
+//         })),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error creating booking: ", error);
+//     res.status(500).json({
+//       code: 500,
+//       status: "error",
+//       message: "Internal server error",
+//     });
+//   }
+// };
 
 // const updateBooking = async (req, res) => {
 //   const { id } = req.params;
@@ -703,7 +705,7 @@ export {
   deleteVenue,
   getVenueById,
   createBooking,
-  getBookingById,
+  // getBookingById,
   // deleteBooking,
   // updateBooking,
   // acceptBookingRequest,

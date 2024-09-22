@@ -17,7 +17,7 @@ router.get("/", getAllVenues);
 router.post("/", upload.single("picture"), createVenue);
 router.put("/:id", upload.single("picture"), updateVenue);
 router.delete("/:id", deleteVenue);
-router.get("/:venue_id", getVenueById);
+router.get("/:id", getVenueById);
 
 router.post("/booking/:venue_id", createBooking);
 
