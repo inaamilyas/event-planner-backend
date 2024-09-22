@@ -278,15 +278,15 @@ const getUserInformation = async (req, res) => {
           : null,
         venue_booking:
           event.venue_booking.length > 0
-            ? event.venue_booking[0].venue.map((venue) => {
-                return {
-                  ...venue,
-                  venue_food_menu: venue_food_menu.map((item) => ({
-                    ...item,
-                    picture: `/foodItems/${path.basename(item.picture)}`,
-                  })),
-                };
-              })
+            ? {
+                ...event.venue_booking[0].venue,
+                venue_food_menu: venue_food_menu.map((item) => ({
+                  ...item,
+                  picture: item.picture
+                    ? `/foodItems/${path.basename(item.picture)}`
+                    : null,
+                })),
+              }
             : null,
       };
     });
