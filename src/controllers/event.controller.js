@@ -7,19 +7,21 @@ const prisma = new PrismaClient();
 // Convert date format to ISO 8601
 // const formattedDate = parse("21/8/2024", "d/M/yyyy", new Date());
 
-// used 
+// used
 const createEvent = async (req, res) => {
   console.log("inside create event");
-  
-  const {user_id} = req?.headers;
+
+  const { user_id } = req.headers;
   const userId = parseInt(user_id);
   const picture = req.file ? req.file.path : null;
-  const { name, time, date, no_of_guests, about, budget } = req?.body;
+  const { name, time, date, about } = req.body;
+
+  console.log(userId, req.body);
 
   //   const formattedDate = new Date(date);
 
   // 1. Check for empty fields
-  if (!name || !time || !date || !no_of_guests || !about || !budget) {
+  if (!name || !time || !date || !about) {
     return res.status(400).json({
       code: 400,
       status: "error",
@@ -34,9 +36,7 @@ const createEvent = async (req, res) => {
         name,
         date: parse(date, "d/M/yyyy", new Date()),
         time,
-        no_of_guests: parseInt(no_of_guests),
         about,
-        budget: budget ? parseFloat(budget) : null,
         user_id: userId,
         picture,
       },
@@ -105,10 +105,10 @@ const updateEvent = async (req, res) => {
 
   const { id } = req.params;
   const picture = req.file ? req.file.path : null;
-  const { name, time, date, no_of_guests, about, budget } = req.body;
+  const { name, time, date, about } = req.body;
 
   // 1. Check for empty fields
-  if (!name || !time || !date || !no_of_guests || !about || !budget) {
+  if (!name || !time || !date || !about) {
     return res.status(400).json({
       code: 400,
       status: "error",
@@ -121,15 +121,15 @@ const updateEvent = async (req, res) => {
     name,
     date: parse(date, "d/M/yyyy", new Date()),
     time,
-    no_of_guests: parseInt(no_of_guests),
     about,
-    budget: budget ? parseFloat(budget) : null,
   };
   if (picture) {
     data.picture = picture;
   }
 
   try {
+    console.log("inside update");
+
     const updatedEvent = await prisma.events.update({
       where: {
         id: parseInt(id),

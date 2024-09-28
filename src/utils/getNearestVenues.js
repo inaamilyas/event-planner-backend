@@ -14,7 +14,7 @@ const getNearestVenues = async (latitude, longitude) => {
           profile_pic: true,
         },
       },
-      venue_food_menu:true
+      venue_food_menu: true,
     },
   });
 
@@ -45,26 +45,30 @@ const getNearestVenues = async (latitude, longitude) => {
     }
   };
 
-  // Map venues with calculated distances
+  // Map venues with calculated distances and format the picture paths
   const venuesWithDistance = venues.map((venue) => ({
     ...venue,
-    distance: formatDistance(
-      haversine(latitude, longitude, venue.latitude, venue.longitude)
-    ),
+    // Calculate the distance using the haversine formula and format it
+    distance: haversine(latitude, longitude, venue.latitude, venue.longitude),
+    // Format venue picture path
     picture: `/venues/${path.basename(venue.picture)}`,
+    // Format menu item picture paths
     venue_food_menu: venue.venue_food_menu.map((menuItem) => ({
       ...menuItem,
       picture: `/foodItems/${path.basename(menuItem.picture)}`,
     })),
   }));
-  
 
-  // Sort venues by distance
-  venuesWithDistance.sort(
-    (a, b) => parseFloat(a.distance) - parseFloat(b.distance)
-  );
+  // Sort venues by distance (ascending order)
+  venuesWithDistance.sort((a, b) => a.distance - b.distance);
 
-  return venuesWithDistance;
+  // Format the distance after sorting
+  const formattedVenues = venuesWithDistance.map((venue) => ({
+    ...venue,
+    distance: formatDistance(venue.distance), // Format the distance after sorting
+  }));
+
+  return formattedVenues;
 };
 
 export default getNearestVenues;

@@ -54,16 +54,29 @@ const addFoodItemForVenue = async (req, res) => {
       },
     });
 
-    console.log(foodItems);
+    const {venue_food_menu} = await prisma.venues.findFirst({
+      where: {
+        id: parseInt(venue_id),
+      },
+      select: {
+        venue_food_menu: true,
+      },
+    });
+
+    const menuItemForVenue = venue_food_menu.map((foodItems) => {
+      return {
+        ...foodItems,
+        picture: `/foodItems/${path.basename(foodItems.picture)}`,
+      };
+    });
+
+    console.log(menuItemForVenue);
 
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Food Item added successfully",
-      data: {
-        ...foodItems,
-        picture: `/foodItems/${path.basename(foodItems.picture)}`,
-      },
+      data: menuItemForVenue
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
@@ -114,7 +127,7 @@ const updateFoodItemForVenue = async (req, res) => {
       data: {
         ...foodItems,
         picture: `/foodItems/${path.basename(foodItems.picture)}`,
-      },  
+      },
     });
   } catch (error) {
     console.error("Error creating venue: ", error);

@@ -248,6 +248,11 @@ const getUserInformation = async (req, res) => {
 
     const venues = await getNearestVenues(latitude, longitude);
 
+    console.log("+++++++++++++++++++++++++++++++++++");
+    console.log(venues);
+    console.log("+++++++++++++++++++++++++++++++++++");
+    
+
     const userInfo = {
       id: user.id,
       name: user.name,

@@ -45,7 +45,7 @@ model events {
   name         String?
   date         DateTime?
   time         String?
-  budget       Int
+  budget       Int?
   about        String?
   no_of_guests Int?
   user_id      Int
