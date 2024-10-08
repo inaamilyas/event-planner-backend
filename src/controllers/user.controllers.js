@@ -248,7 +248,7 @@ const getUserInformation = async (req, res) => {
     });
 
     const venues = await getNearestVenues(latitude, longitude);
-    const allVenues = await getRandomVenues();
+    const allVenues = await getRandomVenues(latitude, longitude);
 
     const userInfo = {
       id: user.id,
