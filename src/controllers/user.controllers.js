@@ -247,6 +247,7 @@ const getUserInformation = async (req, res) => {
     });
 
     const venues = await getNearestVenues(latitude, longitude);
+    const allVenues = await getAllVenuesRandomly();
 
     const userInfo = {
       id: user.id,
@@ -314,6 +315,7 @@ const getUserInformation = async (req, res) => {
         user: userInfo,
         events,
         venues,
+        all_venues:allVenues,
       },
     });
   } catch (error) {
