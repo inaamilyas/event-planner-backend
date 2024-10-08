@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import path from "path";
 import getNearestVenues from "../utils/getNearestVenues.js";
+import getRandomVenues from "../utils/getAllVenues.js";
 
 const prisma = new PrismaClient();
 
@@ -247,7 +248,7 @@ const getUserInformation = async (req, res) => {
     });
 
     const venues = await getNearestVenues(latitude, longitude);
-    const allVenues = await getAllVenuesRandomly();
+    const allVenues = await getRandomVenues();
 
     const userInfo = {
       id: user.id,
