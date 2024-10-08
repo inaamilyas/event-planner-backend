@@ -31,20 +31,46 @@ const getAllVenues = async (req, res) => {
     });
 
     // Update the picture paths to URLs
-    const updatedVenues = venues.map((venue) => {
+    // const updatedVenues = venues.map((venue) => {
+    //   return {
+    //     ...venue,
+    //     picture: `/venues/${path.basename(venue.picture)}`,
+    //     venue_food_menu: venue.venue_food_menu.map((item) => {
+    //       return {
+    //         ...item,
+    //         picture: `/foodItems/${path.basename(item.picture)}`,
+    //       };
+    //     }),
+    //   };
+    // });
+
+    const updatedVenues = Array.isArray(venues) ? venues.map((venue) => {
+      // Check if 'picture' exists and is a string
+      const venuePicture = venue.picture && typeof venue.picture === 'string' 
+        ? `/venues/${path.basename(venue.picture)}` 
+        : null;
+  
+      const updatedMenu = Array.isArray(venue.venue_food_menu) 
+        ? venue.venue_food_menu.map((item) => {
+           
+            const itemPicture = item.picture && typeof item.picture === 'string' 
+              ? `/foodItems/${path.basename(item.picture)}` 
+              : null; 
+    
+            return {
+              ...item,
+              picture: itemPicture,
+            };
+          }) 
+        : []; // Handle missing or invalid 'venue_food_menu'
+    
       return {
         ...venue,
-        picture: `/venues/${path.basename(venue.picture)}`,
-        venue_food_menu: venue.venue_food_menu.map((item) => {
-          return {
-            ...item,
-            picture: `/foodItems/${path.basename(item.picture)}`,
-          };
-        }),
+        picture: venuePicture,
+        venue_food_menu: updatedMenu,
       };
-    });
-
-    console.log(venues);
+    }) : [];
+  
 
     res.status(200).json({
       code: 200,

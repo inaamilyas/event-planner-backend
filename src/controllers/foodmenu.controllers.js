@@ -54,7 +54,7 @@ const addFoodItemForVenue = async (req, res) => {
       },
     });
 
-    const {venue_food_menu} = await prisma.venues.findFirst({
+    const { venue_food_menu } = await prisma.venues.findFirst({
       where: {
         id: parseInt(venue_id),
       },
@@ -63,20 +63,25 @@ const addFoodItemForVenue = async (req, res) => {
       },
     });
 
-    const menuItemForVenue = venue_food_menu.map((foodItems) => {
-      return {
-        ...foodItems,
-        picture: `/foodItems/${path.basename(foodItems.picture)}`,
-      };
-    });
+    let menuItemForVenue = [];
 
-    console.log(menuItemForVenue);
+    if (Array.isArray(venue_food_menu)) {
+      menuItemForVenue = venue_food_menu.map((foodItem) => {
+        return {
+          ...foodItem,
+          picture:
+            foodItem.picture && typeof foodItem.picture === "string"
+              ? `/foodItems/${path.basename(foodItem.picture)}`
+              : null,
+        };
+      });
+    }
 
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Food Item added successfully",
-      data: menuItemForVenue
+      data: menuItemForVenue,
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
