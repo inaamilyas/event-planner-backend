@@ -270,58 +270,40 @@ const getUserInformation = async (req, res) => {
     // console.log(user?.events[0].venue_booking[0]?.bookingFoodMenu);
 
     const events = user.events?.map((event) => {
-      const eventDate = new Date(event.date);
-      const formattedDate = `${eventDate
-        .getDate()
-        .toString()
-        .padStart(2, "0")}/${(eventDate.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}/${eventDate.getFullYear()}`;
+      const eventDate = event?.date ? new Date(event.date) : null;
+    
+      // Format the date if it's valid
+      const formattedDate = eventDate
+        ? `${eventDate.getDate().toString().padStart(2, "0")}/${(eventDate.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}/${eventDate.getFullYear()}`
+        : "Invalid Date";
+    
       return {
         ...event,
         date: formattedDate,
-        picture: event.picture
-          ? `/events/${path.basename(event.picture)}`
+        picture: event?.picture ? `/events/${path.basename(event.picture)}` : null,
+        venue_booking: event?.venue_booking?.length > 0
+          ? {
+              ...event.venue_booking[0]?.venue,
+              venue_food_menu: event.venue_booking[0]?.bookingFoodMenu?.map(
+                (item) => {
+                  return {
+                    id: item?.id ?? null,
+                    quantity: item?.quantity ?? null,
+                    name: item?.venue_food_menu?.name ?? "Unknown Item",
+                    price: item?.venue_food_menu?.price ?? "Price Unavailable",
+                    picture: item?.venue_food_menu?.picture
+                      ? `/foodItems/${path.basename(item.venue_food_menu.picture)}`
+                      : null,
+                  };
+                }
+              ),
+            }
           : null,
-        venue_booking:
-          event.venue_booking?.length > 0
-            ? {
-                ...event.venue_booking[0].venue,
-                venue_food_menu: event.venue_booking[0].bookingFoodMenu?.map(
-                  (item) => {
-                    return {
-                      // ...item,
-                      id: item.id,
-                      quantity: item.quantity,
-                      name: item.venue_food_menu.name,
-                      price: item.venue_food_menu.price,
-                      picture: item.venue_food_menu.picture
-                        ? `/foodItems/${path.basename(
-                            item.venue_food_menu.picture
-                          )}`
-                        : null,
-                    };
-                  }
-                ),
-              }
-            : null,
-        // bookingFoodMenu: event.bookingFoodMenu?.map((item) => {
-        //   return {
-        //     ...item,
-        //     venue_food_menu: item.venue_food_menu
-        //       ? {
-        //           ...item.venue_food_menu,
-        //           picture: item.venue_food_menu.picture
-        //             ? `/foodItems/${path.basename(
-        //                 item.venue_food_menu.picture
-        //               )}`
-        //             : null,
-        //         }
-        //       : null,
-        //   };
-        // }),
       };
     });
+    
 
     // Return the results
     res.status(200).json({
