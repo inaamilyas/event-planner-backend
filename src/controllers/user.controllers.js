@@ -231,7 +231,7 @@ const getUserInformation = async (req, res) => {
             venue_booking: {
               take: 1,
               orderBy: {
-                created_at: 'desc',
+                created_at: "desc",
               },
               include: {
                 venue: true,
@@ -242,6 +242,9 @@ const getUserInformation = async (req, res) => {
                 },
               },
             },
+          },
+          orderBy: {
+            date: "desc",
           },
         },
       },
@@ -257,55 +260,48 @@ const getUserInformation = async (req, res) => {
       profile_pic: user.profile_pic,
     };
 
-    // console.log(user.events[0].venue_booking);
-    // const events = user.events.map((event) => ({
-    //   ...event,
-    //   date: new Date(event.date).toISOString().split("T")[0],
-    //   picture: `/events/${path.basename(event.picture)}`,
-    //   venue_booking:
-    //     event.venue_booking.length > 0
-    //       ? // event.venue_booking[0].venue.length > 0
-    //         event.venue_booking[0].venue
-    //       : null,
-    // }));
-
-    // console.log(user?.events[0].venue_booking[0]?.bookingFoodMenu);
-
     const events = user.events?.map((event) => {
       const eventDate = event?.date ? new Date(event.date) : null;
-    
+
       // Format the date if it's valid
       const formattedDate = eventDate
-        ? `${eventDate.getDate().toString().padStart(2, "0")}/${(eventDate.getMonth() + 1)
+        ? `${eventDate.getDate().toString().padStart(2, "0")}/${(
+            eventDate.getMonth() + 1
+          )
             .toString()
             .padStart(2, "0")}/${eventDate.getFullYear()}`
         : "Invalid Date";
-    
+
       return {
         ...event,
         date: formattedDate,
-        picture: event?.picture ? `/events/${path.basename(event.picture)}` : null,
-        venue_booking: event?.venue_booking?.length > 0
-          ? {
-              ...event.venue_booking[0]?.venue,
-              venue_food_menu: event.venue_booking[0]?.bookingFoodMenu?.map(
-                (item) => {
-                  return {
-                    id: item?.id ?? null,
-                    quantity: item?.quantity ?? null,
-                    name: item?.venue_food_menu?.name ?? "Unknown Item",
-                    price: item?.venue_food_menu?.price ?? "Price Unavailable",
-                    picture: item?.venue_food_menu?.picture
-                      ? `/foodItems/${path.basename(item.venue_food_menu.picture)}`
-                      : null,
-                  };
-                }
-              ),
-            }
+        picture: event?.picture
+          ? `/events/${path.basename(event.picture)}`
           : null,
+        venue_booking:
+          event?.venue_booking?.length > 0
+            ? {
+                ...event.venue_booking[0]?.venue,
+                venue_food_menu: event.venue_booking[0]?.bookingFoodMenu?.map(
+                  (item) => {
+                    return {
+                      id: item?.id ?? null,
+                      quantity: item?.quantity ?? null,
+                      name: item?.venue_food_menu?.name ?? "Unknown Item",
+                      price:
+                        item?.venue_food_menu?.price ?? "Price Unavailable",
+                      picture: item?.venue_food_menu?.picture
+                        ? `/foodItems/${path.basename(
+                            item.venue_food_menu.picture
+                          )}`
+                        : null,
+                    };
+                  }
+                ),
+              }
+            : null,
       };
     });
-    
 
     // Return the results
     res.status(200).json({
@@ -316,7 +312,7 @@ const getUserInformation = async (req, res) => {
         user: userInfo,
         events,
         venues,
-        all_venues:allVenues,
+        all_venues: allVenues,
       },
     });
   } catch (error) {
