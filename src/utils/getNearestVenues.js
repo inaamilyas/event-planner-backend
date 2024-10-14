@@ -5,6 +5,9 @@ import path from "path";
 const getNearestVenues = async (latitude, longitude) => {
   // 2. Fetch all venues with their coordinates
   const venues = await prisma.venues.findMany({
+    where:{
+      status:1
+    },
     include: {
       owner: {
         select: {

@@ -68,6 +68,7 @@ model venues {
   about     String?
   owner_id  Int
   picture   String?
+  status    Int     @default(0)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -76,42 +77,42 @@ model venues {
   venue_booking   venue_booking[]
   venue_food_menu venue_food_menu[]
 }
-model venue_booking {
-  id            Int                @id @default(autoincrement())
-  venue_id      Int
-  event_id      Int
-  phone         String?
-  date          DateTime?
-  start_time    String?
-  end_time      String?
-   created_at DateTime @default(now())
-  updated_at DateTime @updatedAt @default(now())
-  
 
-  venue         venues             @relation(fields: [venue_id], references: [id], onDelete: Cascade)
-  event         events             @relation(fields: [event_id], references: [id], onDelete: Cascade)
+model venue_booking {
+  id         Int       @id @default(autoincrement())
+  venue_id   Int
+  event_id   Int
+  phone      String?
+  date       DateTime?
+  start_time String?
+  end_time   String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
+
+  venue           venues              @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+  event           events              @relation(fields: [event_id], references: [id], onDelete: Cascade)
   bookingFoodMenu booking_food_menu[] // Updated: relation to the junction table
 }
 
 model venue_food_menu {
-  id           Int                @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   venue_id     Int
   name         String?
   price        String?
   is_available Boolean? @default(true)
   picture      String?
 
-  venue        venues             @relation(fields: [venue_id], references: [id], onDelete: Cascade)
+  venue           venues              @relation(fields: [venue_id], references: [id], onDelete: Cascade)
   bookingFoodMenu booking_food_menu[] // Updated: relation to the junction table
 }
 
 model booking_food_menu {
-  id             Int              @id @default(autoincrement())
-  booking_id     Int
-  quantity Int?
-  food_menu_id   Int
+  id           Int  @id @default(autoincrement())
+  booking_id   Int
+  quantity     Int?
+  food_menu_id Int
 
-  venue_booking  venue_booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  venue_booking   venue_booking   @relation(fields: [booking_id], references: [id], onDelete: Cascade)
   venue_food_menu venue_food_menu @relation(fields: [food_menu_id], references: [id], onDelete: Cascade)
 
   @@unique([booking_id, food_menu_id]) // Optional: To prevent duplicate entries for the same booking and menu item

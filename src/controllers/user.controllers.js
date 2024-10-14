@@ -193,13 +193,8 @@ const updateProfile = async (req, res) => {
     return res.status(200).json({
       code: 200,
       status: "success",
-      message: "Login successful",
-      data: {
-        id: updatedUser.id,
-        fullname: updatedUser.fullname,
-        email: updatedUser.email,
-        profile_pic: profilePic,
-      },
+      message: "Profile updated successfully",
+      data: null,
     });
   } catch (error) {
     console.error(error);
