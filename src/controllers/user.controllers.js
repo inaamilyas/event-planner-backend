@@ -224,7 +224,7 @@ const getUserInformation = async (req, res) => {
       include: {
         events: {
           where:{
-            date: { lte: currentDate },
+            date: { lt: currentDate },
           },
           include: {
             venue_booking: {

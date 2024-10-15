@@ -44,33 +44,35 @@ const getAllVenues = async (req, res) => {
     //   };
     // });
 
-    const updatedVenues = Array.isArray(venues) ? venues.map((venue) => {
-      // Check if 'picture' exists and is a string
-      const venuePicture = venue.picture && typeof venue.picture === 'string' 
-        ? `/venues/${path.basename(venue.picture)}` 
-        : null;
-  
-      const updatedMenu = Array.isArray(venue.venue_food_menu) 
-        ? venue.venue_food_menu.map((item) => {
-           
-            const itemPicture = item.picture && typeof item.picture === 'string' 
-              ? `/foodItems/${path.basename(item.picture)}` 
-              : null; 
-    
-            return {
-              ...item,
-              picture: itemPicture,
-            };
-          }) 
-        : []; // Handle missing or invalid 'venue_food_menu'
-    
-      return {
-        ...venue,
-        picture: venuePicture,
-        venue_food_menu: updatedMenu,
-      };
-    }) : [];
-  
+    const updatedVenues = Array.isArray(venues)
+      ? venues.map((venue) => {
+          // Check if 'picture' exists and is a string
+          const venuePicture =
+            venue.picture && typeof venue.picture === "string"
+              ? `/venues/${path.basename(venue.picture)}`
+              : null;
+
+          const updatedMenu = Array.isArray(venue.venue_food_menu)
+            ? venue.venue_food_menu.map((item) => {
+                const itemPicture =
+                  item.picture && typeof item.picture === "string"
+                    ? `/foodItems/${path.basename(item.picture)}`
+                    : null;
+
+                return {
+                  ...item,
+                  picture: itemPicture,
+                };
+              })
+            : []; // Handle missing or invalid 'venue_food_menu'
+
+          return {
+            ...venue,
+            picture: venuePicture,
+            venue_food_menu: updatedMenu,
+          };
+        })
+      : [];
 
     res.status(200).json({
       code: 200,
@@ -105,7 +107,7 @@ const createVenue = async (req, res) => {
 
     const address = await getAddressbyCoordinates(latitude, longitude);
 
-    await prisma.venues.create({
+    const venue = await prisma.venues.create({
       data: {
         name,
         address,
@@ -116,12 +118,51 @@ const createVenue = async (req, res) => {
         longitude: parseFloat(longitude),
         phone: phone.toString(),
       },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            profile_pic: true,
+          },
+        },
+        venue_food_menu: true,
+      },
     });
+
+    // Check if 'picture' exists and is a string
+    const venuePicture =
+      venue.picture && typeof venue.picture === "string"
+        ? `/venues/${path.basename(venue.picture)}`
+        : null;
+
+    const updatedMenu = Array.isArray(venue.venue_food_menu)
+      ? venue.venue_food_menu.map((item) => {
+          const itemPicture =
+            item.picture && typeof item.picture === "string"
+              ? `/foodItems/${path.basename(item.picture)}`
+              : null;
+
+          return {
+            ...item,
+            picture: itemPicture,
+          };
+        })
+      : [];
+
+    const updatedVenue = {
+      ...venue,
+      picture: venuePicture,
+      venue_food_menu: updatedMenu,
+    };
+
     res.status(200).json({
       code: 200,
       status: "success",
       message: "Venue created successfully",
-      data: null,
+      data: updatedVenue,
     });
   } catch (error) {
     console.error("Error creating venue: ", error);
