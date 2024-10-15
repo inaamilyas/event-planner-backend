@@ -216,12 +216,16 @@ const getUserInformation = async (req, res) => {
   longitude = parseFloat(longitude);
 
   try {
+    const currentDate = new Date();
     const user = await prisma.users.findFirst({
       where: {
         id: parseInt(user_id),
       },
       include: {
         events: {
+          where:{
+            date: { lte: currentDate },
+          },
           include: {
             venue_booking: {
               take: 1,
@@ -245,10 +249,10 @@ const getUserInformation = async (req, res) => {
       },
     });
 
-    const upcomingEvents = await getUpcomingEvents(user_id);
-    const events = formatEvents(upcomingEvents);
-
+    const  upcomingEvents = await getUpcomingEvents(user_id);
+    let events = formatEvents(upcomingEvents);
     const allEvents = formatEvents(user?.events);
+    events = [...events, ...allEvents];
 
     const venues = await getNearestVenues(latitude, longitude);
     const allVenues = await getRandomVenues(latitude, longitude);
@@ -269,7 +273,6 @@ const getUserInformation = async (req, res) => {
         events,
         venues,
         all_venues: allVenues,
-        all_events: allEvents,
       },
     });
   } catch (error) {

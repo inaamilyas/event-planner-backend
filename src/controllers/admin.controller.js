@@ -4,10 +4,12 @@ import path from "path";
 const prisma = new PrismaClient();
 
 const getVenuesForApprove = async (req, res) => {
+  console.log("inside get venus for admin dashboard");
+
   try {
     const venues = await prisma.venues.findMany({
       where: {
-        status: 1,
+        status: 0,
       },
       include: {
         owner: {
@@ -71,9 +73,10 @@ const getVenuesForApprove = async (req, res) => {
 
 const changeVenueStaus = async (req, res) => {
   const { status, venue_id } = req.body;
+  console.log("inside change venue status", status, venue_id);
 
   try {
-    const venue = await Prisma.venue.update({
+    const venue = await prisma.venues.update({
       where: {
         id: parseInt(venue_id),
       },
