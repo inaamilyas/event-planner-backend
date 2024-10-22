@@ -9,7 +9,7 @@ const getVenuesForApprove = async (req, res) => {
   try {
     const venues = await prisma.venues.findMany({
       where: {
-        status: 0,
+        // status: 0,
       },
       include: {
         owner: {
