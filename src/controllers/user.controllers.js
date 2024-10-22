@@ -174,8 +174,6 @@ const updateProfile = async (req, res) => {
     const profilePic = req.file ? req.file.filename : null;
     const { user_id } = req.headers;
 
-    console.log(req.body);
-
     // Hash the password if it's provided
     let hashedPassword = undefined;
     if (password) {
@@ -200,6 +198,16 @@ const updateProfile = async (req, res) => {
       data: null,
     });
   } catch (error) {
+    // Handle specific Prisma unique constraint error
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        code: 409,
+        status: "error",
+        message: `Email '${req.body.email}' is already taken.`,
+        data: null,
+      });
+    }
+
     console.error(error);
     return res.status(500).json({
       code: 500,
