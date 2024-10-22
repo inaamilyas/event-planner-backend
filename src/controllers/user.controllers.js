@@ -172,7 +172,7 @@ const updateProfile = async (req, res) => {
   try {
     const { fullname, email, password } = req.body;
     const profilePic = req.file ? req.file.filename : null;
-    const { user_id } = req.headers;
+    const { user_id } = req.headers;    
 
     // Hash the password if it's provided
     let hashedPassword = undefined;
@@ -181,7 +181,7 @@ const updateProfile = async (req, res) => {
     }
 
     // Update user profile in database
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.users.update({
       where: { id: parseInt(user_id) },
       data: {
         fullname: fullname,
