@@ -170,9 +170,11 @@ const login = async (req, res) => {
 const updateProfile = async (req, res) => {
   console.log("inside update profile");
   try {
-    const { fullname, email, password } = req.body;
+    const { name, email, password } = req.body;
     const profilePic = req.file ? req.file.filename : null;
-    const { user_id } = req.headers;    
+    const { user_id } = req.headers;
+
+    console.log(req.body);
 
     // Hash the password if it's provided
     let hashedPassword = undefined;
@@ -184,10 +186,10 @@ const updateProfile = async (req, res) => {
     const updatedUser = await prisma.users.update({
       where: { id: parseInt(user_id) },
       data: {
-        fullname: fullname,
+        name: name,
         email: email,
         ...(hashedPassword && { password: hashedPassword }), // Update password if provided
-        profilePic: profilePic,
+        profile_pic: profilePic,
       },
     });
 
