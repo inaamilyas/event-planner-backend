@@ -189,13 +189,24 @@ const updateProfile = async (req, res) => {
         ...(hashedPassword && { password: hashedPassword }), // Update password if provided
         profile_pic: profilePic,
       },
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        profile_pic: true,
+      },
     });
 
     return res.status(200).json({
       code: 200,
       status: "success",
       message: "Profile updated successfully",
-      data: null,
+      data: {
+        ...updatedUser,
+        profile_pic: updatedUser?.profile_pic
+        ? `/users/${path.basename(updatedUser.profile_pic)}`
+        : null,
+      },
     });
   } catch (error) {
     // Handle specific Prisma unique constraint error
@@ -272,7 +283,9 @@ const getUserInformation = async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      profile_pic: user.profile_pic,
+      profile_pic: user?.profile_pic
+        ? `/users/${path.basename(user.profile_pic)}`
+        : null,
     };
 
     res.status(200).json({
