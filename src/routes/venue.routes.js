@@ -6,8 +6,7 @@ import {
   deleteVenue,
   getVenueById,
   updateVenue,
-  // suggestNearestVenues,
-  // suggestVenuesBasedOnWeather,
+  getUserBookings
 } from "../controllers/venue.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -19,16 +18,8 @@ router.put("/:id", upload.single("picture"), updateVenue);
 router.delete("/:id", deleteVenue);
 router.get("/:id", getVenueById);
 
+router.get("/booking/get-all-bookings", getUserBookings);
 router.post("/booking/:venue_id", createBooking);
 
-// router.put("/booking/:venue_id", updateBooking);
-// router.delete("/booking/:venue_id", deleteBooking);
-// router.get("/booking/:venue_id", getBookingById);
-// router.post("/booking/accept/:venue_id", acceptBookingRequest);
-
-// router.post("/booking/requests", showAllBookingRequests);
-
-// router.post("/suggest/nearest", suggestNearestVenues);
-// router.post("/suggest/weather", suggestVenuesBasedOnWeather);
 
 export default router;

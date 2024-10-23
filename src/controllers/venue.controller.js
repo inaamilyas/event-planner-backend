@@ -344,49 +344,84 @@ const createBooking = async (req, res) => {
   }
 };
 
-// const getBookingById = async (req, res) => {
-//   const { id } = req.params;
+const getUserBookings = async (req, res) => {
+  const { user_id } = req.headers;
+  try {
+    const bookings = await prisma.venue_booking.findMany({
+      where: {
+        event: {
+          user_id: user_id, // Filter by events created by the current user
+        },
+      },
+      select: {
+        id: true,
+        phone: true,
+        date: true,
+        status: true,
+        start_time: true,
+        end_time: true,
+        event: {
+          select: {
+            id: true,
+            name: true,
+            date: true,
+            time: true,
+            budget: true,
+            about: true,
+          },
+        },
+        venue: {
+          select: {
+            id: true,
+            name: true,
+            latitude: true,
+            longitude: true,
+            phone: true,
+            address: true,
+            about: true,
+          },
+        },
+        bookingFoodMenu: {
+          select: {
+            id: true,
+            quantity: true,
+            venue_food_menu: {
+              select: {
+                name: true,
+                price: true,
+                picture: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-//   try {
-//     const venue = await prisma.venues.findFirst({
-//       where: {
-//         id: parseInt(id),
-//       },
-//       include: {
-//         owner: {
-//           select: {
-//             id: true,
-//             name: true,
-//             phone: true,
-//             profile_pic: true,
-//           },
-//         },
-//         venue_food_menu: true,
-//       },
-//     });
+    const transformedBookings = bookings.map((booking) => ({
+      ...booking,
+      bookingFoodMenu: booking.bookingFoodMenu.map((food) => ({
+        id: food.id,
+        quantity: food.quantity,
+        name: food.venue_food_menu.name,
+        price: food.venue_food_menu.price,
+        image: food.venue_food_menu.picture,
+      })),
+    }));
 
-//     res.status(200).json({
-//       code: 200,
-//       status: "success",
-//       message: "Venue details fetched successfully",
-//       data: {
-//         ...venue,
-//         picture: `/venues/${path.basename(venue.picture)}`,
-//         venue_food_menu: venue.venue_food_menu.map((menuItem) => ({
-//           ...menuItem,
-//           picture: `/foodItems/${path.basename(menuItem.picture)}`,
-//         })),
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error creating booking: ", error);
-//     res.status(500).json({
-//       code: 500,
-//       status: "error",
-//       message: "Internal server error",
-//     });
-//   }
-// };
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      data: transformedBookings,
+    });
+  } catch (error) {
+    console.error("Error fetching user bookings: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
 
 // const updateBooking = async (req, res) => {
 //   const { id } = req.params;
@@ -773,11 +808,5 @@ export {
   deleteVenue,
   getVenueById,
   createBooking,
-  // getBookingById,
-  // deleteBooking,
-  // updateBooking,
-  // acceptBookingRequest,
-  // suggestNearestVenues,
-  // showAllBookingRequests,
-  // suggestVenuesBasedOnWeather,
+  getUserBookings,
 };

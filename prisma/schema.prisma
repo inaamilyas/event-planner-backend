@@ -84,6 +84,7 @@ model venue_booking {
   event_id   Int
   phone      String?
   date       DateTime?
+  status     Int       @default(0)
   start_time String?
   end_time   String?
   created_at DateTime  @default(now())
