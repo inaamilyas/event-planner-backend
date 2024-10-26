@@ -345,12 +345,14 @@ const createBooking = async (req, res) => {
 };
 
 const getUserBookings = async (req, res) => {
+  console.log("inside get bookings");
   const { user_id } = req.headers;
+  
   try {
     const bookings = await prisma.venue_booking.findMany({
       where: {
         event: {
-          user_id: user_id, // Filter by events created by the current user
+          user_id:parseInt(user_id), // Filter by events created by the current user
         },
       },
       select: {
