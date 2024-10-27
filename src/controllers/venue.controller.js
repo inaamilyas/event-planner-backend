@@ -436,6 +436,9 @@ const getMangerVenuesBookings = async (req, res) => {
           owner_id: parseInt(manager_id), // Filter by events created by the current user
         },
       },
+      orderBy: {
+        created_at: 'desc', // Sort by date in descending order
+      },
       select: {
         id: true,
         phone: true,
