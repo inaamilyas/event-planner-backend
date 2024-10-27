@@ -437,7 +437,7 @@ const getMangerVenuesBookings = async (req, res) => {
         },
       },
       orderBy: {
-        created_at: 'desc', // Sort by date in descending order
+        created_at: "desc", // Sort by date in descending order
       },
       select: {
         id: true,
@@ -514,7 +514,7 @@ const changeOrderStatus = async (req, res) => {
   const { booking_id, status } = req.body;
 
   try {
-     await prisma.venue_booking.update({
+    await prisma.venue_booking.update({
       where: {
         id: parseInt(booking_id),
       },
@@ -527,6 +527,32 @@ const changeOrderStatus = async (req, res) => {
       code: 200,
       status: "success",
       message: `Order ${status === 1 ? "accepted" : "cancled"} successfully`,
+    });
+  } catch (error) {
+    console.error("Error fetching user bookings: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+const deleteeUserBooking = async (req, res) => {
+  console.log("inside user delete booking");
+  const { booking_id } = req.body;
+
+  try {
+    await prisma.venue_booking.delete({
+      where: {
+        id: parseInt(booking_id),
+      },
+    });
+
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: `Order deleted successfully`,
     });
   } catch (error) {
     console.error("Error fetching user bookings: ", error);
@@ -925,5 +951,6 @@ export {
   createBooking,
   getUserBookings,
   getMangerVenuesBookings,
-  changeOrderStatus
+  changeOrderStatus,
+  deleteeUserBooking
 };

@@ -23,6 +23,7 @@ router.get("/:id", getVenueById);
 router.get("/booking/get-all-bookings", getUserBookings);
 router.get("/booking/get-all-manager-bookings", getMangerVenuesBookings);
 router.post("/booking/manager/status", changeOrderStatus);
+router.post("/booking/user/delete", deleteeUserBooking);
 router.post("/booking/:venue_id", createBooking);
 
 
