@@ -6,7 +6,9 @@ import {
   deleteVenue,
   getVenueById,
   updateVenue,
-  getUserBookings
+  getUserBookings,
+  getMangerVenuesBookings,
+  changeOrderStatus
 } from "../controllers/venue.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -19,6 +21,8 @@ router.delete("/:id", deleteVenue);
 router.get("/:id", getVenueById);
 
 router.get("/booking/get-all-bookings", getUserBookings);
+router.get("/booking/get-all-manager-bookings", getMangerVenuesBookings);
+router.post("/booking/manager/status", changeOrderStatus);
 router.post("/booking/:venue_id", createBooking);
 
 

@@ -347,12 +347,12 @@ const createBooking = async (req, res) => {
 const getUserBookings = async (req, res) => {
   console.log("inside get bookings");
   const { user_id } = req.headers;
-  
+
   try {
     const bookings = await prisma.venue_booking.findMany({
       where: {
         event: {
-          user_id:parseInt(user_id), // Filter by events created by the current user
+          user_id: parseInt(user_id), // Filter by events created by the current user
         },
       },
       select: {
@@ -414,6 +414,116 @@ const getUserBookings = async (req, res) => {
       code: 200,
       status: "success",
       data: transformedBookings,
+    });
+  } catch (error) {
+    console.error("Error fetching user bookings: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+const getMangerVenuesBookings = async (req, res) => {
+  console.log("inside manager venues bookings");
+  const { manager_id } = req.headers;
+
+  try {
+    const bookings = await prisma.venue_booking.findMany({
+      where: {
+        venue: {
+          owner_id: parseInt(manager_id), // Filter by events created by the current user
+        },
+      },
+      select: {
+        id: true,
+        phone: true,
+        date: true,
+        status: true,
+        start_time: true,
+        end_time: true,
+        event: {
+          select: {
+            id: true,
+            name: true,
+            date: true,
+            time: true,
+            budget: true,
+            about: true,
+          },
+        },
+        venue: {
+          select: {
+            id: true,
+            name: true,
+            latitude: true,
+            longitude: true,
+            phone: true,
+            address: true,
+            about: true,
+          },
+        },
+        bookingFoodMenu: {
+          select: {
+            id: true,
+            quantity: true,
+            venue_food_menu: {
+              select: {
+                name: true,
+                price: true,
+                picture: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const transformedBookings = bookings.map((booking) => ({
+      ...booking,
+      bookingFoodMenu: booking.bookingFoodMenu.map((food) => ({
+        id: food.id,
+        quantity: food.quantity,
+        name: food.venue_food_menu.name,
+        price: food.venue_food_menu.price,
+        image: food.venue_food_menu.picture,
+      })),
+    }));
+
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      data: transformedBookings,
+    });
+  } catch (error) {
+    console.error("Error fetching user bookings: ", error);
+    res.status(500).json({
+      code: 500,
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+const changeOrderStatus = async (req, res) => {
+  console.log("inside change order status");
+  const { booking_id, status } = req.body;
+
+  try {
+     await prisma.venue_booking.update({
+      where: {
+        id: parseInt(booking_id),
+      },
+      data: {
+        status: parseInt(status),
+      },
+    });
+
+    res.status(200).json({
+      code: 200,
+      status: "success",
+      message: `Order ${status === 1 ? "accepted" : "cancled"} successfully`,
     });
   } catch (error) {
     console.error("Error fetching user bookings: ", error);
@@ -811,4 +921,6 @@ export {
   getVenueById,
   createBooking,
   getUserBookings,
+  getMangerVenuesBookings,
+  changeOrderStatus
 };
