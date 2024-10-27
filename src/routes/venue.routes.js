@@ -8,7 +8,8 @@ import {
   updateVenue,
   getUserBookings,
   getMangerVenuesBookings,
-  changeOrderStatus
+  changeOrderStatus,
+  deleteUserBooking
 } from "../controllers/venue.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -23,7 +24,7 @@ router.get("/:id", getVenueById);
 router.get("/booking/get-all-bookings", getUserBookings);
 router.get("/booking/get-all-manager-bookings", getMangerVenuesBookings);
 router.post("/booking/manager/status", changeOrderStatus);
-router.post("/booking/user/delete", deleteeUserBooking);
+router.post("/booking/user/delete", deleteUserBooking);
 router.post("/booking/:venue_id", createBooking);
 
 
