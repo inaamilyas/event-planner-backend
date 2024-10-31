@@ -19,11 +19,13 @@ model users {
   email       String  @unique
   password    String?
   profile_pic String?
+  fcm_token   String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  events events[]
+  events          events[]
+  venue_feedbacks venue_feedbacks[]
 }
 
 model venue_managers {
@@ -76,6 +78,7 @@ model venues {
   owner           venue_managers    @relation(fields: [owner_id], references: [id], onDelete: Cascade)
   venue_booking   venue_booking[]
   venue_food_menu venue_food_menu[]
+  venue_feedbacks venue_feedbacks[]
 }
 
 model venue_booking {
@@ -117,4 +120,17 @@ model booking_food_menu {
   venue_food_menu venue_food_menu @relation(fields: [food_menu_id], references: [id], onDelete: Cascade)
 
   @@unique([booking_id, food_menu_id]) // Optional: To prevent duplicate entries for the same booking and menu item
+}
+
+model venue_feedbacks {
+  id       Int     @id @default(autoincrement())
+  user_id  Int
+  venue_id Int
+  feedback String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user  users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  venue venues @relation(fields: [venue_id], references: [id], onDelete: Cascade)
 }
