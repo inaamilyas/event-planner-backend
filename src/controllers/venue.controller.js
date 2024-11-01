@@ -194,6 +194,11 @@ const getVenueById = async (req, res) => {
           },
         },
         venue_food_menu: true,
+        venue_feedbacks: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -208,6 +213,19 @@ const getVenueById = async (req, res) => {
           ...menuItem,
           picture: `/foodItems/${path.basename(menuItem.picture)}`,
         })),
+        venue_feedbacks: venue?.venue_feedbacks
+        .map((feebackItem) => {
+          const user = feebackItem.user;
+
+          return {
+            feedback: feebackItem.feedback,
+            username: user?.name || null,
+            profile_picture: user?.picture
+              ? `/users/${path.basename(user.picture)}`
+              : null,
+          };
+        })
+        .slice(0, 10),
       },
     });
   } catch (error) {

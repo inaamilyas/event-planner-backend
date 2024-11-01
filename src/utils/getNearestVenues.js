@@ -5,8 +5,8 @@ import path from "path";
 const getNearestVenues = async (latitude, longitude) => {
   // 2. Fetch all venues with their coordinates
   const venues = await prisma.venues.findMany({
-    where:{
-      status:1
+    where: {
+      status: 1,
     },
     include: {
       owner: {
@@ -18,6 +18,11 @@ const getNearestVenues = async (latitude, longitude) => {
         },
       },
       venue_food_menu: true,
+      venue_feedbacks: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
 
@@ -48,34 +53,57 @@ const getNearestVenues = async (latitude, longitude) => {
     }
   };
 
-// Map venues with calculated distances and format the picture paths
-const venuesWithDistance = venues?.map((venue) => ({
-  ...venue,
-  // Calculate the distance using the haversine formula, ensuring coordinates are present
-  distance: venue?.latitude && venue?.longitude
-    ? haversine(latitude, longitude, venue.latitude, venue.longitude)
-    : null,
-  // Format venue picture path if it exists
-  picture: venue?.picture ? `/venues/${path.basename(venue.picture)}` : null,
-  // Safely map menu items and format their picture paths if venue_food_menu exists
-  venue_food_menu: venue?.venue_food_menu?.map((menuItem) => ({
-    ...menuItem,
-    picture: menuItem?.picture ? `/foodItems/${path.basename(menuItem.picture)}` : null,
-  })) ?? [], // Default to an empty array if venue_food_menu is undefined or null
-})) ?? []; // Default to an empty array if venues is undefined or null
+  // Map venues with calculated distances and format the picture paths
+  const venuesWithDistance =
+    venues?.map((venue) => ({
+      ...venue,
+      // Calculate the distance using the haversine formula, ensuring coordinates are present
+      distance:
+        venue?.latitude && venue?.longitude
+          ? haversine(latitude, longitude, venue.latitude, venue.longitude)
+          : null,
+      // Format venue picture path if it exists
+      picture: venue?.picture
+        ? `/venues/${path.basename(venue.picture)}`
+        : null,
+      // Safely map menu items and format their picture paths if venue_food_menu exists
+      venue_food_menu:
+        venue?.venue_food_menu?.map((menuItem) => ({
+          ...menuItem,
+          picture: menuItem?.picture
+            ? `/foodItems/${path.basename(menuItem.picture)}`
+            : null,
+        })) ?? [], // Default to an empty array if venue_food_menu is undefined or null
+      venue_feedbacks: venue?.venue_feedbacks
+        .map((feebackItem) => {
+          const user = feebackItem.user;
 
-// Sort venues by distance (ascending order), skipping venues with no distance
-venuesWithDistance.sort((a, b) => {
-  if (a.distance === null) return 1;
-  if (b.distance === null) return -1;
-  return a.distance - b.distance;
-});
+          return {
+            feedback: feebackItem.feedback,
+            username: user?.name || null,
+            profile_picture: user?.picture
+              ? `/users/${path.basename(user.picture)}`
+              : null,
+          };
+        })
+        .slice(0, 10),
+    })) ?? []; // Default to an empty array if venues is undefined or null
 
-// Format the distance after sorting, ensuring distance is present
-const formattedVenues = venuesWithDistance.map((venue) => ({
-  ...venue,
-  distance: venue?.distance !== null ? formatDistance(venue.distance) : "Distance Unavailable",
-}));
+  // Sort venues by distance (ascending order), skipping venues with no distance
+  venuesWithDistance.sort((a, b) => {
+    if (a.distance === null) return 1;
+    if (b.distance === null) return -1;
+    return a.distance - b.distance;
+  });
+
+  // Format the distance after sorting, ensuring distance is present
+  const formattedVenues = venuesWithDistance.map((venue) => ({
+    ...venue,
+    distance:
+      venue?.distance !== null
+        ? formatDistance(venue.distance)
+        : "Distance Unavailable",
+  }));
 
   return formattedVenues;
 };
