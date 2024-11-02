@@ -71,9 +71,6 @@ const getRandomVenues = async (latitude, longitude) => {
         })) ?? [], // Default to an empty array if venue_food_menu is undefined or null
     })) ?? []; // Default to an empty array if venues is undefined or null
 
-  console.log("====================================");
-  console.log(venuesWithDistance);
-  console.log("====================================");
 
   // Format the distance after sorting, ensuring distance is present
   const formattedVenues = venuesWithDistance.map((venue) => ({

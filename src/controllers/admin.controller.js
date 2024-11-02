@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import path from "path";
+import sendFCMNotification from "../utils/fcmNotifications.js";
 
 const prisma = new PrismaClient();
 
@@ -83,6 +84,16 @@ const changeVenueStaus = async (req, res) => {
       data: {
         status: status,
       },
+      include: {
+        owner: true,
+      },
+    });
+
+    sendFCMNotification([venue?.owner?.fcm_token], {
+      title: `${venue.name.toUpperCase()} Approval Status`,
+      body: `Your request for ${venue.name} has been ${
+        status === 1 ? "approved" : "rejected"
+      }`,
     });
 
     return res.status(200).json({

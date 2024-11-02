@@ -3,12 +3,13 @@ import bcrypt from "bcrypt";
 import path from "path";
 import getNearestVenues from "../utils/getNearestVenues.js";
 import getRandomVenues from "../utils/getAllVenues.js";
+import sendFCMNotification from "../utils/fcmNotifications.js";
 
 const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
   console.log("inside sign up");
-  const { name, email, password, confirmPassword } = req.body;
+  const { name, email, password, confirmPassword, fcm_token } = req.body;
   // 1. Check for empty fields
   if (!name || !email || !password || !confirmPassword) {
     return res.status(400).json({
@@ -64,6 +65,7 @@ const signup = async (req, res) => {
         name,
         email,
         password: hashedPassword,
+        fcm_token,
         profile_pic: null,
       },
       select: {
@@ -93,7 +95,7 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
   console.log("inside login");
-  const { email, password } = req.body;
+  const { email, password, fcm_token } = req.body;
 
   // 1. Check for empty fields
   if (!email || !password) {
@@ -148,6 +150,15 @@ const login = async (req, res) => {
         data: null,
       });
     }
+
+    const updatedUser = await prisma.users.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        fcm_token: fcm_token,
+      },
+    });
 
     // 5. Return success response
     return res.status(200).json({
@@ -204,8 +215,8 @@ const updateProfile = async (req, res) => {
       data: {
         ...updatedUser,
         profile_pic: updatedUser?.profile_pic
-        ? `/users/${path.basename(updatedUser.profile_pic)}`
-        : null,
+          ? `/users/${path.basename(updatedUser.profile_pic)}`
+          : null,
       },
     });
   } catch (error) {

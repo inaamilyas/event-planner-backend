@@ -10,6 +10,7 @@ import feedbackRoutes from "./src/routes/feedback.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import bodyParser from "body-parser";
+import admin from "firebase-admin";
 
 const app = express();
 
@@ -24,6 +25,11 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true }));
+
+// Initialize FCM
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(), // Use applicationDefault to read from the env variable
+});
 
 // Serve static files from the public directory
 const __filename = fileURLToPath(import.meta.url);

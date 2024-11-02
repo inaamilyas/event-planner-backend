@@ -35,6 +35,7 @@ model venue_managers {
   password    String?
   phone       String?
   profile_pic String?
+  fcm_token   String?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

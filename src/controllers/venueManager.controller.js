@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const signup = async (req, res) => {
   console.log("inside manager sign up");
-  const { name, email, phone, password, confirmPassword } = req.body;
+  const { name, email, phone, password, confirmPassword, fcm_token } = req.body;
 
   // 1. Check for empty fields
   if (!name || !email || !phone || !password || !confirmPassword) {
@@ -62,6 +62,7 @@ const signup = async (req, res) => {
         name,
         email,
         phone,
+        fcm_token,
         password: hashedPassword,
         profile_pic: null,
       },
@@ -94,7 +95,7 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
   console.log("inside manager login");
-  const { email, password } = req.body;
+  const { email, password, fcm_token } = req.body;
 
   // 1. Check for empty fields
   if (!email || !password) {
@@ -133,7 +134,7 @@ const login = async (req, res) => {
     }
 
     // 4. Compare passwords
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
         code: 401,
@@ -142,6 +143,15 @@ const login = async (req, res) => {
         data: null,
       });
     }
+
+    const updatedUser = await prisma.venue_managers.update({
+      where:{
+        id:user.id
+      },
+      data:{
+        fcm_token:fcm_token
+      }
+    })
 
     // 5. Return success response
     return res.status(200).json({

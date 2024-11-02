@@ -123,7 +123,6 @@ const updateFoodItemForVenue = async (req, res) => {
       data,
     });
 
-    console.log(foodItems);
 
     res.status(200).json({
       code: 200,
@@ -230,7 +229,6 @@ const saveFoodItemsForBooking = async (req, res) => {
     })
   );
 
-  console.log(bookedMenuItems);
 
   // Respond with success
   res.status(201).json({

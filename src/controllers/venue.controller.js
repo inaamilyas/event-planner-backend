@@ -3,6 +3,7 @@ import path from "path";
 import getAddressbyCoordinates from "../utils/getAddressByCoordinates.js";
 
 import { PrismaClient } from "@prisma/client";
+import sendFCMNotification from "../utils/fcmNotifications.js";
 const prisma = new PrismaClient();
 
 const getAllVenues = async (req, res) => {
@@ -214,18 +215,18 @@ const getVenueById = async (req, res) => {
           picture: `/foodItems/${path.basename(menuItem.picture)}`,
         })),
         venue_feedbacks: venue?.venue_feedbacks
-        .map((feebackItem) => {
-          const user = feebackItem.user;
+          .map((feebackItem) => {
+            const user = feebackItem.user;
 
-          return {
-            feedback: feebackItem.feedback,
-            username: user?.name || null,
-            profile_picture: user?.picture
-              ? `/users/${path.basename(user.picture)}`
-              : null,
-          };
-        })
-        .slice(0, 10),
+            return {
+              feedback: feebackItem.feedback,
+              username: user?.name || null,
+              profile_picture: user?.picture
+                ? `/users/${path.basename(user.picture)}`
+                : null,
+            };
+          })
+          .slice(0, 10),
       },
     });
   } catch (error) {
@@ -294,8 +295,16 @@ const deleteVenue = async (req, res) => {
   const { id } = req.params;
 
   try {
-    await prisma.venues.delete({
+    const deltedVenue = await prisma.venues.delete({
       where: { id: parseInt(id) },
+      include: {
+        owner: true,
+      },
+    });
+
+    sendFCMNotification([deltedVenue?.owner?.fcm_token], {
+      title: `${deltedVenue.name.toUpperCase()} DELETED`,
+      body: `Your venue ${deltedVenue.name} has been deleted`,
     });
 
     res.status(200).json({
@@ -342,6 +351,37 @@ const createBooking = async (req, res) => {
         end_time,
         phone,
       },
+      include: {
+        event: true,
+        venue: true,
+      },
+    });
+
+    // send notification to manager for booking
+    const venue = await prisma.venues.findFirst({
+      where: {
+        id: parseInt(venue_id),
+      },
+      include: {
+        owner: {
+          select: {
+            fcm_token: true,
+          },
+        },
+      },
+    });
+
+    const fcmToken = venue?.owner?.fcm_token;
+
+    sendFCMNotification([fcmToken], {
+      title: `New Booking for ${venue.name}`,
+      body: `Event : ${newBooking?.event?.name} - (${
+        newBooking.date +
+        " " +
+        newBooking.start_time +
+        "-" +
+        newBooking.end_time
+      })`,
     });
 
     console.log("Booking created successfully");
@@ -532,14 +572,35 @@ const changeOrderStatus = async (req, res) => {
   const { booking_id, status } = req.body;
 
   try {
-    await prisma.venue_booking.update({
+    const booking = await prisma.venue_booking.update({
       where: {
         id: parseInt(booking_id),
       },
       data: {
         status: parseInt(status),
       },
+      select: {
+        event: {
+          include:{
+            user:true
+          }
+        },
+      },
     });
+
+    // send Notification to user for booking status
+    sendFCMNotification(
+      [booking?.event?.user?.fcm_token],
+      {
+        // title: "test notification",
+        body: `Venue Booking request for ${booking?.event?.name} ${
+          status === 1 ? "accepted successfully" : "cancled"
+        } `,
+      },
+      {
+        title: `Order ${status === 1 ? "accepted successfully" : "cancled"}`,
+      }
+    );
 
     res.status(200).json({
       code: 200,
@@ -592,5 +653,5 @@ export {
   getUserBookings,
   getMangerVenuesBookings,
   changeOrderStatus,
-  deleteUserBooking
+  deleteUserBooking,
 };
