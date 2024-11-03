@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import path from 'path'
 
 const prisma = new PrismaClient();
 
@@ -145,13 +146,13 @@ const login = async (req, res) => {
     }
 
     const updatedUser = await prisma.venue_managers.update({
-      where:{
-        id:user.id
+      where: {
+        id: user.id,
       },
-      data:{
-        fcm_token:fcm_token
-      }
-    })
+      data: {
+        fcm_token: fcm_token,
+      },
+    });
 
     // 5. Return success response
     return res.status(200).json({
@@ -171,10 +172,61 @@ const login = async (req, res) => {
   }
 };
 
+// const updateProfile = async (req, res) => {
+//   try {
+//     const { fullname, email, password } = req.body;
+//     const profilePic = req.file ? req.file.filename : null;
+
+//     // Hash the password if it's provided
+//     let hashedPassword = undefined;
+//     if (password) {
+//       hashedPassword = await bcrypt.hash(password, 10);
+//     }
+
+//     // Update user profile in database
+//     const updatedUser = await prisma.venue_managers.update({
+//       where: { email: email },
+//       data: {
+//         fullname: fullname,
+//         email: email,
+//         ...(hashedPassword && { password: hashedPassword }), // Update password if provided
+//         profilePic: profilePic,
+//       },
+//     });
+
+//     console.log(updatedUser);
+
+//     return res.status(200).json({
+//       code: 200,
+//       status: "success",
+//       message: "Profile updated successfully",
+//       data: {
+//         id: updatedUser.id,
+//         fullname: updatedUser.fullname,
+//         email: updatedUser.email,
+//         profile_pic: profilePic,
+//       },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       code: 500,
+//       status: "error",
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+
 const updateProfile = async (req, res) => {
+  console.log("inside update profile");
   try {
-    const { fullname, email, password } = req.body;
+    console.log(req.body);
+    
+    const { name, email, password } = req.body;
     const profilePic = req.file ? req.file.filename : null;
+    const { manager_id } = req.headers;
+    
 
     // Hash the password if it's provided
     let hashedPassword = undefined;
@@ -183,28 +235,44 @@ const updateProfile = async (req, res) => {
     }
 
     // Update user profile in database
-    const updatedUser = await prisma.VenueManagers.update({
-      where: { email: email },
+    const updatedUser = await prisma.venue_managers.update({
+      where: { id: parseInt(manager_id) },
       data: {
-        fullname: fullname,
+        name: name,
         email: email,
         ...(hashedPassword && { password: hashedPassword }), // Update password if provided
-        profilePic: profilePic,
+        profile_pic: profilePic,
+      },
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        profile_pic: true,
       },
     });
 
     return res.status(200).json({
       code: 200,
       status: "success",
-      message: "Login successful",
+      message: "Profile updated successfully",
       data: {
-        id: updatedUser.id,
-        fullname: updatedUser.fullname,
-        email: updatedUser.email,
-        profile_pic: profilePic,
+        ...updatedUser,
+        profile_pic: updatedUser?.profile_pic
+          ? `/users/${path.basename(updatedUser.profile_pic)}`
+          : null,
       },
     });
   } catch (error) {
+    // Handle specific Prisma unique constraint error
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        code: 409,
+        status: "error",
+        message: `Email '${req.body.email}' is already taken.`,
+        data: null,
+      });
+    }
+
     console.error(error);
     return res.status(500).json({
       code: 500,

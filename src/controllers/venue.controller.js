@@ -28,6 +28,11 @@ const getAllVenues = async (req, res) => {
           },
         },
         venue_food_menu: true,
+        venue_feedbacks: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -67,10 +72,22 @@ const getAllVenues = async (req, res) => {
               })
             : []; // Handle missing or invalid 'venue_food_menu'
 
+          const venue_feedbacks = venue?.venue_feedbacks.map((feebackItem) => {
+            const user = feebackItem.user;
+            return {
+              feedback: feebackItem.feedback,
+              username: user?.name || null,
+              profile_picture: user?.picture
+                ? `/users/${path.basename(user.picture)}`
+                : null,
+            };
+          });
+
           return {
             ...venue,
             picture: venuePicture,
             venue_food_menu: updatedMenu,
+            venue_feedbacks: venue_feedbacks,
           };
         })
       : [];
@@ -581,9 +598,9 @@ const changeOrderStatus = async (req, res) => {
       },
       select: {
         event: {
-          include:{
-            user:true
-          }
+          include: {
+            user: true,
+          },
         },
       },
     });
