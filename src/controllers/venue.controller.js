@@ -58,6 +58,12 @@ const getAllVenues = async (req, res) => {
               ? `/venues/${path.basename(venue.picture)}`
               : null;
 
+          const galleryPictures = venue.gallery
+            ? venue?.gallery?.map(
+                (picture) => `/venues/${path.basename(picture)}`
+              )
+            : [];
+
           const updatedMenu = Array.isArray(venue.venue_food_menu)
             ? venue.venue_food_menu.map((item) => {
                 const itemPicture =
@@ -86,6 +92,7 @@ const getAllVenues = async (req, res) => {
           return {
             ...venue,
             picture: venuePicture,
+            gallery: galleryPictures,
             venue_food_menu: updatedMenu,
             venue_feedbacks: venue_feedbacks,
           };
@@ -121,7 +128,14 @@ const createVenue = async (req, res) => {
 
   try {
     // Get the image file path from req.file
-    const imagePath = req.file ? req.file.path : null;
+    // const imagePath = req.file ? req.file.path : null;
+
+    const imagePath = req.files["picture"]
+      ? req.files["picture"][0].path
+      : null;
+    const gallery = req.files["gallery"] || [];
+
+    const galleryPaths = gallery.map((file) => path.normalize(file.path));
 
     const address = await getAddressbyCoordinates(latitude, longitude);
 
@@ -135,6 +149,7 @@ const createVenue = async (req, res) => {
         owner_id: owner.id,
         longitude: parseFloat(longitude),
         phone: phone.toString(),
+        gallery: galleryPaths ? galleryPaths : [],
       },
       include: {
         owner: {

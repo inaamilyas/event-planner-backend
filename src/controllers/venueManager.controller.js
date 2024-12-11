@@ -98,6 +98,9 @@ const login = async (req, res) => {
   console.log("inside manager login");
   const { email, password, fcm_token } = req.body;
 
+  console.log(fcm_token);
+  
+
   // 1. Check for empty fields
   if (!email || !password) {
     return res.status(400).json({

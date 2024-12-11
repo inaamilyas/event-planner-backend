@@ -9,14 +9,21 @@ import {
   getUserBookings,
   getMangerVenuesBookings,
   changeOrderStatus,
-  deleteUserBooking
+  deleteUserBooking,
 } from "../controllers/venue.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
 router.get("/", getAllVenues);
-router.post("/", upload.single("picture"), createVenue);
+router.post(
+  "/",
+  upload.fields([
+    { name: "picture", maxCount: 1 },
+    { name: "gallery", maxCount: 3 },
+  ]),
+  createVenue
+);
 router.put("/:id", upload.single("picture"), updateVenue);
 router.delete("/:id", deleteVenue);
 router.get("/:id", getVenueById);
@@ -26,6 +33,5 @@ router.get("/booking/get-all-manager-bookings", getMangerVenuesBookings);
 router.post("/booking/manager/status", changeOrderStatus);
 router.post("/booking/user/delete", deleteUserBooking);
 router.post("/booking/:venue_id", createBooking);
-
 
 export default router;

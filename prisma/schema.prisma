@@ -72,6 +72,7 @@ model venues {
   owner_id  Int
   picture   String?
   status    Int     @default(0)
+  gallery   String[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

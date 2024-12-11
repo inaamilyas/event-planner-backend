@@ -66,6 +66,11 @@ const getNearestVenues = async (latitude, longitude) => {
       picture: venue?.picture
         ? `/venues/${path.basename(venue.picture)}`
         : null,
+      gallery: venue.gallery
+        ? venue?.gallery?.map(
+            (imagePath) => `/venues/${path.basename(imagePath)}`
+          )
+        : [],
       // Safely map menu items and format their picture paths if venue_food_menu exists
       venue_food_menu:
         venue?.venue_food_menu?.map((menuItem) => ({

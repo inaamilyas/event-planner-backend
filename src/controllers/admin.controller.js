@@ -56,7 +56,7 @@ const getVenuesForApprove = async (req, res) => {
         })
       : [];
 
-      console.log(updatedVenues);
+      // console.log(updatedVenues);
       
 
     res.status(200).json({
